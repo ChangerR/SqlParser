@@ -1,0 +1,7 @@
+/.vscode
+lex.yy.c
+test
+test.l
+sql.hpp
+sql.cpp
+.DS_Store
