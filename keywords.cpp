@@ -12,7 +12,7 @@
 #define KEYWORD(a,b,c) {a,b,c},
 
 const ScanKeyword ScanKeywords[] = {
-
+#include "kwlist.h"
 };
 
 const int	NumScanKeywords = lengthof(ScanKeywords);
