@@ -1,14 +1,5 @@
 #include "keywords.h"
 
-/*
- * Maximum length for identifiers (e.g. table names, column names,
- * function names).  Names actually are limited to one less byte than this,
- * because the length must include a trailing zero byte.
- *
- * Changing this requires an initdb.
- */
-#define NAMEDATALEN 64
-
 #define KEYWORD(a,b,c) {a,b,c},
 
 const ScanKeyword ScanKeywords[] = {

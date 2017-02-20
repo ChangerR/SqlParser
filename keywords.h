@@ -7,6 +7,16 @@
 #define TYPE_FUNC_NAME_KEYWORD	2
 #define RESERVED_KEYWORD		3
 
+/*
+ * Maximum length for identifiers (e.g. table names, column names,
+ * function names).  Names actually are limited to one less byte than this,
+ * because the length must include a trailing zero byte.
+ *
+ * Changing this requires an initdb.
+ */
+ 
+#define NAMEDATALEN 64
+
 typedef struct ScanKeyword
 {
 	const char *name;			/* in lower case */

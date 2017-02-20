@@ -42,6 +42,7 @@ inline List* lappend(List* list,SQLNode* node) {
 %union {
     char* str;
     const char* keyword;
+    int ival;
     SQLNode* node;
     List* list;
     ResTarget* target;
@@ -56,6 +57,9 @@ inline List* lappend(List* list,SQLNode* node) {
 %type <target> target_el
 %type <list> opt_target_list target_list 
 %token <str> IDENT FCONST SCONST BCONST XCONST Op
+%token <ival>	ICONST PARAM
+%token			DOT_DOT
+%token			LESS_EQUALS GREATER_EQUALS NOT_EQUALS
 %token <keyword> K_SELECT K_FROM K_WHERE K_AS
 
 %%
