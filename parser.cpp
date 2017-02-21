@@ -1,12 +1,5 @@
 #include "keywords.h"
-#include "sqlparser.h"
-
-extern core_yyscan_t scanner_init(const char *str,
-			 core_yy_extra_type *yyext,
-			 const ScanKeyword *keywords,
-			 int num_keywords);
-
-extern void scanner_finish(core_yyscan_t yyscanner);
+#include "scanner.h"
 
 /*
  * raw_parser

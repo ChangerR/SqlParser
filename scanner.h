@@ -6,7 +6,6 @@ class StatementBlock;
 typedef struct base_yy_extra_type
 {
     StatementBlock* block;
-
 } base_yy_extra_type;
 
 #define yyget_extra(yyscanner) (*((base_yy_extra_type **) (yyscanner)))
@@ -95,5 +94,12 @@ typedef union core_YYSTYPE
  * Set the type of YYSTYPE.
  */
 #define YYSTYPE core_YYSTYPE
+
+extern core_yyscan_t scanner_init(const char *str,
+			 core_yy_extra_type *yyext,
+			 const ScanKeyword *keywords,
+			 int num_keywords);
+
+extern void scanner_finish(core_yyscan_t yyscanner);
 
 #endif

@@ -1,23 +1,11 @@
 #ifndef __SQLPARSER_KEYWORDS_H
 #define __SQLPARSER_KEYWORDS_H
-
+#include "c.h"
 /* Keyword categories --- should match lists in gram.y */
 #define UNRESERVED_KEYWORD		0
 #define COL_NAME_KEYWORD		1
 #define TYPE_FUNC_NAME_KEYWORD	2
 #define RESERVED_KEYWORD		3
-
-typedef short int16;
-
-/*
- * Maximum length for identifiers (e.g. table names, column names,
- * function names).  Names actually are limited to one less byte than this,
- * because the length must include a trailing zero byte.
- *
- * Changing this requires an initdb.
- */
- 
-#define NAMEDATALEN 64
 
 typedef struct ScanKeyword
 {

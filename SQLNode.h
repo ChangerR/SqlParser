@@ -2,7 +2,7 @@
 #define __SQLPARSER_SQLNODE_H
 #include <string>
 #include <vector>
-
+class SQLASTVisitor;
 class SQLNode {
 public:
     enum NodeType {
@@ -11,7 +11,9 @@ public:
         COLUMNREF,
     };
 
-    virtual void accept(SQLASTVisitor visitor) = 0;
+    virtual ~SQLNode() {}
+
+    virtual void accept(SQLASTVisitor* visitor) = 0;
 
     virtual NodeType getNodeType() = 0;
 };
@@ -22,15 +24,15 @@ public:
 
     virtual ~CloumnRef() {}
 
-    virtual void accept(SQLASTVisitor visitor) {
+    virtual void accept(SQLASTVisitor* visitor) {
         //TODO:fix this accept
     }
 
     virtual NodeType getNodeType() {
-        return NodeType::COLUMNREF;
+        return COLUMNREF;
     }
 public:
-    std::vector fields;
+    std::vector<std::string> fields;
 };
 
 class Expression : public SQLNode {
@@ -43,7 +45,7 @@ public:
        
     }
 
-    virtual ~Expresstion(){
+    virtual ~Expression(){
         if ( lexpr != NULL ) {
             delete lexpr;
         }
@@ -52,8 +54,12 @@ public:
         }
     }
 
-    virtual void accept(SQLASTVisitor visitor) {
+    virtual void accept(SQLASTVisitor* visitor) {
         //TODO:fix this accept
+    }
+
+    virtual NodeType getNodeType() {
+        return EXPRESSION;
     }
     
 public:
@@ -65,7 +71,7 @@ public:
 
 class ResTarget : public SQLNode {
 public:
-    ResTarget(SQLNode* val,const std::string& name) :name(name),val(val){}
+    ResTarget(SQLNode* val,const std::string& name) :val(val),name(name){}
     
     virtual ~ResTarget() {
         if ( val != NULL ) {
@@ -73,8 +79,12 @@ public:
         }
     }
 
-    virtual void accept(SQLASTVisitor visitor) {
+    virtual void accept(SQLASTVisitor* visitor) {
         //TODO:fix this accept
+    }
+
+    virtual NodeType getNodeType() {
+        return RESTARGET;
     }
 public:
     SQLNode* val;

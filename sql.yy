@@ -5,10 +5,8 @@
 #include <stdio.h>
 #include <string>
 #include <vector>
-#include "sqlparser.h"
+#include "scanner.h"
 #include "SQLNode.h"
-#include "Expresstion.h"
-#include "ResTarget.h"
 #include "StatementBlock.h"
 #include "SingleStatement.h"
 

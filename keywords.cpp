@@ -1,4 +1,7 @@
+#include <stdio.h>
+#include <string.h>
 #include "keywords.h"
+#include "scanner.h"
 #include "sql.hpp"
 
 #define KEYWORD(a,b,c) {a,b,c},

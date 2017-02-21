@@ -1,12 +1,12 @@
 SRCTREE?= $(shell pwd)
 CXX:=g++
-OPTIMIZATION?=-Og
+OPTIMIZATION?=-O2
 WARNINGS=-Wall
 DEBUG?= -g -ggdb -DDEBUG=1
 LEX=flex
 YACC=bison
 INCLUDE=
-REAL_CFLAGS= $(OPTIMIZATION) $(WARNINGS) $(DEBUG) $(INCLUDE)
+REAL_CFLAGS= $(OPTIMIZATION) $(WARNINGS) $(DEBUG) $(INCLUDE) -c
 
 .PHONY: all clean
 
@@ -27,7 +27,7 @@ scan.o:scan.cpp
 	$(CXX) $(REAL_CFLAGS) -o $@ $<
 
 %.cpp:%.l
-	$(LEX) -o $@ $<
+	$(LEX) -CF -o $@ $<
 
 %.cpp:%.yy
 	$(YACC) -d -o $@ $<

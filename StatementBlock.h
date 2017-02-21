@@ -11,5 +11,5 @@ public:
 
 private:
     std::vector<SingleStatement*> stmts_;
-}
+};
 #endif
