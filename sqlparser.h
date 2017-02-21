@@ -5,7 +5,7 @@
 class StatementBlock;
 typedef struct base_yy_extra_type
 {
-    StatementBlock block;
+    StatementBlock* block;
 
 } base_yy_extra_type;
 

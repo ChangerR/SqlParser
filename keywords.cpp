@@ -1,4 +1,5 @@
 #include "keywords.h"
+#include "sql.hpp"
 
 #define KEYWORD(a,b,c) {a,b,c},
 
