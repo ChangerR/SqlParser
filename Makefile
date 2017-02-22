@@ -13,15 +13,11 @@ REAL_CFLAGS= $(OPTIMIZATION) $(WARNINGS) $(DEBUG) $(INCLUDE) -c
 CPPS = sql.cpp scan.cpp
 OBJS = keywords.o sql.o scan.o parser.o
 
-all:$(CPPS) $(OBJS)
+all:$(OBJS)
 	echo "HAHA"
 	
 clean:
 	rm $(OBJS) sql.cpp sql.hpp scan.cpp
-
-sql.o:sql.cpp
-
-scan.o:scan.cpp
 
 %.o:%.cpp
 	$(CXX) $(REAL_CFLAGS) -o $@ $<
@@ -31,3 +27,8 @@ scan.o:scan.cpp
 
 %.cpp:%.yy
 	$(YACC) -d -o $@ $<
+	
+sql.hpp:sql.cpp
+sql.o:sql.cpp
+scan.o:scan.cpp
+keywords.o:sql.hpp keywords.cpp

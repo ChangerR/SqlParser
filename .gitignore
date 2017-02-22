@@ -5,3 +5,4 @@ test.l
 sql.hpp
 sql.cpp
 .DS_Store
+*.o
