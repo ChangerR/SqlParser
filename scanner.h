@@ -8,7 +8,7 @@ typedef struct base_yy_extra_type
     StatementBlock* block;
 } base_yy_extra_type;
 
-#define yyget_extra(yyscanner) (*((base_yy_extra_type **) (yyscanner)))
+#define sp_yyget_extra(yyscanner) (*((base_yy_extra_type **) (yyscanner)))
 
 /*
  * The type of yyscanner is opaque outside scan.l.
@@ -101,5 +101,8 @@ extern core_yyscan_t scanner_init(const char *str,
 			 int num_keywords);
 
 extern void scanner_finish(core_yyscan_t yyscanner);
+
+extern int base_yylex(YYSTYPE *lvalp, YYLTYPE *llocp,
+		   core_yyscan_t yyscanner);
 
 #endif

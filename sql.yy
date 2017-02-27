@@ -5,10 +5,17 @@
 #include <stdio.h>
 #include <string>
 #include <vector>
-#include "scanner.h"
 #include "SQLNode.h"
 #include "StatementBlock.h"
 #include "SingleStatement.h"
+
+#define YYLLOC_DEFAULT(Current, Rhs, N) \
+	do { \
+		if ((N) > 0) \
+			(Current) = (Rhs)[1]; \
+		else \
+			(Current) = (-1); \
+	} while (0)
 
 typedef std::vector<SQLNode*> List;
 
@@ -63,7 +70,7 @@ inline List* lappend(List* list,SQLNode* node) {
 %%
 stmtmuti: stmtblock 
             {
-                pg_yyget_extra(yyscanner)->block = $1;
+                sp_yyget_extra(yyscanner)->block = $1;
             }
             ;
 
