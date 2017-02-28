@@ -5,6 +5,7 @@
 #include <stdio.h>
 #include <string>
 #include <vector>
+#include "gramparser.h"
 #include "SQLNode.h"
 #include "StatementBlock.h"
 #include "SingleStatement.h"

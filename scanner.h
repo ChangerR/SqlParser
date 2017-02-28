@@ -2,19 +2,6 @@
 #define __SQLPARSER_SQLPARSER_H
 #include "keywords.h"
 
-class StatementBlock;
-typedef struct base_yy_extra_type
-{
-    StatementBlock* block;
-} base_yy_extra_type;
-
-#define sp_yyget_extra(yyscanner) (*((base_yy_extra_type **) (yyscanner)))
-
-/*
- * The type of yyscanner is opaque outside scan.l.
- */
-typedef void *core_yyscan_t;
-
 /*
  * The YY_EXTRA data that a flex scanner allows us to pass around.
  * Private state needed by the core scanner goes here.  Note that the actual
@@ -102,7 +89,5 @@ extern core_yyscan_t scanner_init(const char *str,
 
 extern void scanner_finish(core_yyscan_t yyscanner);
 
-extern int base_yylex(YYSTYPE *lvalp, YYLTYPE *llocp,
-		   core_yyscan_t yyscanner);
 
 #endif
