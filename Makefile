@@ -1,5 +1,6 @@
 SRCTREE?= $(shell pwd)
-CXX:=g++
+CC?=gcc
+CXX?=g++
 OPTIMIZATION?=-O2
 WARNINGS=-Wall -Wno-deprecated-register
 DEBUG?= -g -ggdb -DDEBUG=1
