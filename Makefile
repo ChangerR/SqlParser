@@ -11,8 +11,7 @@ LKFALG= -L$(SRCTREE)/build/lib -ltcmalloc
 
 .PHONY: all clean
 
-CPPS = sql.cpp scan.cpp
-OBJS = allocator.o keywords.o sql.o scan.o parser.o main.o
+OBJS = allocator.o keywords.o parser.o main.o scan.o sql.o 
 
 all:main
 
@@ -20,7 +19,7 @@ main:$(OBJS)
 	$(CXX) -o $@ $(LKFALG) $(OBJS)
 
 clean:
-	rm $(OBJS) sql.cpp sql.hpp scan.cpp *.d *.d.*
+	-rm $(OBJS) sql.cpp sql.hpp scan.cpp *.d *.d.*
 
 %.o:%.cpp
 	$(CXX) $(REAL_CFLAGS) -o $@ $<
@@ -35,13 +34,11 @@ $(SRCTREE)/build/include/gperftools/tcmalloc.h:
 	cd $(SRCTREE)/3rd/gperftools && ./autogen.sh && ./configure --prefix=$(SRCTREE)/build && make install
 
 %.d:%.cpp
-	@set -e; rm -f $@; $(CC) -MM $< $(INCLUDE) > $@.$$$$; \
+	rm -f $@; $(CC) -MM $< $(INCLUDE) > $@.$$$$; \
 	sed 's,\($*\)\.o[ :]*,\1.o $@ : ,g' < $@.$$$$ > $@; \
 	rm -f $@.$$$$
 
--include $(OBJS:.o=.d)
-
 sql.hpp:sql.cpp
-sql.o:sql.cpp
-scan.o:scan.cpp
-keywords.o:sql.hpp keywords.cpp
+scan.cpp:scan.l
+
+-include $(OBJS:.o=.d)
