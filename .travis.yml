@@ -1,13 +1,13 @@
 language: cpp
 
 compiler:
-- clang++-8.0
+- g++
 
 os:
-- osx
+- linux
 
 before_install:
-- brew install automake
+- apt-get install -y autoconf gcc gcc-c++
 - make
 
 script: ./main
