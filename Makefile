@@ -33,11 +33,12 @@ clean:
 $(SRCTREE)/build/include/gperftools/tcmalloc.h:
 	cd $(SRCTREE)/3rd/gperftools && ./autogen.sh && ./configure --prefix=$(SRCTREE)/build && make install
 
-%.d:%.cpp
+%.d:%.cpp 
 	rm -f $@; $(CC) -MM $< $(INCLUDE) > $@.$$$$; \
 	sed 's,\($*\)\.o[ :]*,\1.o $@ : ,g' < $@.$$$$ > $@; \
 	rm -f $@.$$$$
 
+allocator.d:$(SRCTREE)/build/include/gperftools/tcmalloc.h
 sql.hpp:sql.cpp
 scan.cpp:scan.l
 
