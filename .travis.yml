@@ -9,7 +9,6 @@ os:
 - linux
 
 before_install:
-- apt-get install -y autoconf gcc gcc-c++
 - make
 
 script: ./main
@@ -17,3 +16,9 @@ script: ./main
 branches:
   only:
   - master
+
+addons:
+  apt:
+    packages:
+    - gcc-4.8
+    - g++-4.8
