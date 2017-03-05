@@ -31,6 +31,9 @@ clean:
 %.cpp:%.yy
 	$(YACC) -d -o $@ $<
 
+$(SRCTREE)/build/include/gperftools/tcmalloc.h:
+	cd $(SRCTREE)/3rd/gperftools && ./autogen.sh && ./configure --prefix=$(SRCTREE)/build && make install
+
 %.d:%.cpp
 	@set -e; rm -f $@; $(CC) -MM $< $(INCLUDE) > $@.$$$$; \
 	sed 's,\($*\)\.o[ :]*,\1.o $@ : ,g' < $@.$$$$ > $@; \
