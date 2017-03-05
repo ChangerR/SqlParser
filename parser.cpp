@@ -1,6 +1,6 @@
 #include "keywords.h"
-#include "scanner.h"
-
+#include "gramparser.h"
+#include <assert.h>
 /*
  * raw_parser
  *		Given a query in string form, do lexical and grammatical analysis.
@@ -31,7 +31,7 @@ raw_parser(const char *str)
 	scanner_finish(yyscanner);
 
 	if (yyresult)				/* error */
-		return NIL;
+		return NULL;
 
 	return yyextra.block;
 }
@@ -57,7 +57,7 @@ raw_parser(const char *str)
 int
 base_yylex(YYSTYPE *lvalp, YYLTYPE *llocp, core_yyscan_t yyscanner)
 {
-	base_yy_extra_type *yyextra = pg_yyget_extra(yyscanner);
+	base_yy_extra_type *yyextra = sp_yyget_extra(yyscanner);
 	int			cur_token;
 	int			next_token;
 	int			cur_token_length;
@@ -83,15 +83,15 @@ base_yylex(YYSTYPE *lvalp, YYLTYPE *llocp, core_yyscan_t yyscanner)
 	 */
 	switch (cur_token)
 	{
-		case NOT:
-			cur_token_length = 3;
-			break;
-		case NULLS_P:
-			cur_token_length = 5;
-			break;
-		case WITH:
-			cur_token_length = 4;
-			break;
+		// case NOT:
+		// 	cur_token_length = 3;
+		// 	break;
+		// case NULLS_P:
+		// 	cur_token_length = 5;
+		// 	break;
+		// case WITH:
+		// 	cur_token_length = 4;
+		// 	break;
 		default:
 			return cur_token;
 	}
@@ -103,7 +103,7 @@ base_yylex(YYSTYPE *lvalp, YYLTYPE *llocp, core_yyscan_t yyscanner)
 	 */
 	yyextra->lookahead_end = yyextra->core_yy_extra.scanbuf +
 		*llocp + cur_token_length;
-	Assert(*(yyextra->lookahead_end) == '\0');
+	assert(*(yyextra->lookahead_end) == '\0');
 
 	/*
 	 * Save and restore *llocp around the call.  It might look like we could
@@ -128,44 +128,44 @@ base_yylex(YYSTYPE *lvalp, YYLTYPE *llocp, core_yyscan_t yyscanner)
 	yyextra->have_lookahead = true;
 
 	/* Replace cur_token if needed, based on lookahead */
-	switch (cur_token)
-	{
-		case NOT:
-			/* Replace NOT by NOT_LA if it's followed by BETWEEN, IN, etc */
-			switch (next_token)
-			{
-				case BETWEEN:
-				case IN_P:
-				case LIKE:
-				case ILIKE:
-				case SIMILAR:
-					cur_token = NOT_LA;
-					break;
-			}
-			break;
+	// switch (cur_token)
+	// {
+	// 	case NOT:
+	// 		/* Replace NOT by NOT_LA if it's followed by BETWEEN, IN, etc */
+	// 		switch (next_token)
+	// 		{
+	// 			case BETWEEN:
+	// 			case IN_P:
+	// 			case LIKE:
+	// 			case ILIKE:
+	// 			case SIMILAR:
+	// 				cur_token = NOT_LA;
+	// 				break;
+	// 		}
+	// 		break;
 
-		case NULLS_P:
-			/* Replace NULLS_P by NULLS_LA if it's followed by FIRST or LAST */
-			switch (next_token)
-			{
-				case FIRST_P:
-				case LAST_P:
-					cur_token = NULLS_LA;
-					break;
-			}
-			break;
+	// 	case NULLS_P:
+	// 		/* Replace NULLS_P by NULLS_LA if it's followed by FIRST or LAST */
+	// 		switch (next_token)
+	// 		{
+	// 			case FIRST_P:
+	// 			case LAST_P:
+	// 				cur_token = NULLS_LA;
+	// 				break;
+	// 		}
+	// 		break;
 
-		case WITH:
-			/* Replace WITH by WITH_LA if it's followed by TIME or ORDINALITY */
-			switch (next_token)
-			{
-				case TIME:
-				case ORDINALITY:
-					cur_token = WITH_LA;
-					break;
-			}
-			break;
-	}
+	// 	case WITH:
+	// 		/* Replace WITH by WITH_LA if it's followed by TIME or ORDINALITY */
+	// 		switch (next_token)
+	// 		{
+	// 			case TIME:
+	// 			case ORDINALITY:
+	// 				cur_token = WITH_LA;
+	// 				break;
+	// 		}
+	// 		break;
+	// }
 
 	return cur_token;
 }

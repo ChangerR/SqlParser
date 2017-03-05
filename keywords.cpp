@@ -1,8 +1,6 @@
 #include <stdio.h>
 #include <string.h>
-#include "keywords.h"
-#include "scanner.h"
-#include "sql.hpp"
+#include "gramparser.h"
 
 #define KEYWORD(a,b,c) {a,b,c},
 

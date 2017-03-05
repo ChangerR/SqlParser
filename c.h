@@ -1,5 +1,6 @@
 #ifndef __SQLPARSER_C_H
 #define __SQLPARSER_C_H
+#include <stdio.h>
 
 typedef short int16;
 typedef size_t Size;

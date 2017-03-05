@@ -5,4 +5,8 @@ test.l
 sql.hpp
 sql.cpp
 .DS_Store
+/build/
 *.o
+*.d
+*.d.*
+main

@@ -3,8 +3,9 @@
     scan.l
         sql parser scanner
 */
-#include "sqlparser.h"
-#include "sql.hpp"
+#include "allocator.h"
+#include "parser.h"
+#include "gramparser.h"
 }
 
 %{
@@ -12,6 +13,11 @@
 int			backslash_quote = BACKSLASH_QUOTE_SAFE_ENCODING;
 bool		escape_string_warning = true;
 bool		standard_conforming_strings = true;
+
+/*
+ * Set the type of YYSTYPE.
+ */
+#define YYSTYPE core_YYSTYPE
 
 /*
  * Set the type of yyextra.  All state variables used by the scanner should
@@ -669,7 +675,7 @@ downcase_identifier(const char *ident, int len, bool warn, bool truncate)
 	char	   *result;
 	int			i;
 
-	result = malloc(len + 1);
+	result = (char *)Allocator::malloc(len + 1);
 
 	/*
 	 * SQL99 specifies Unicode-aware case normalization, which we don't yet
@@ -714,7 +720,7 @@ scanner_yyerror(const char *message, core_yyscan_t yyscanner)
 {
 	const char *loc = yyextra->scanbuf + *yylloc;
 
-	printf("msg:%s\n",msg);
+	printf("scanner yyerror:%s\n",message);
 }
 
 /*
@@ -729,8 +735,10 @@ scanner_init(const char *str,
 	Size		slen = strlen(str);
 	yyscan_t	scanner;
 
-	if (yylex_init(&scanner) != 0)
+	if (yylex_init(&scanner) != 0) 
+	{
 		printf("yylex_init() failed:");
+	}
 
 	core_yyset_extra(yyext, scanner);
 
@@ -744,7 +752,7 @@ scanner_init(const char *str,
 	/*
 	 * Make a scan buffer with special termination needed by flex.
 	 */
-	yyext->scanbuf = (char *) malloc(slen + 2);
+	yyext->scanbuf = (char *) Allocator::malloc(slen + 2);
 	yyext->scanbuflen = slen;
 	memcpy(yyext->scanbuf, str, slen);
 	yyext->scanbuf[slen] = yyext->scanbuf[slen + 1] = YY_END_OF_BUFFER_CHAR;
@@ -752,7 +760,7 @@ scanner_init(const char *str,
 
 	/* initialize literal buffer to a reasonable but expansible size */
 	yyext->literalalloc = 1024;
-	yyext->literalbuf = (char *) malloc(yyext->literalalloc);
+	yyext->literalbuf = (char *) Allocator::malloc(yyext->literalalloc);
 	yyext->literallen = 0;
 
 	return scanner;
@@ -775,18 +783,14 @@ scanner_finish(core_yyscan_t yyscanner)
 	 * We do bother to pfree the scanbuf and literal buffer, but only if they
 	 * represent a nontrivial amount of space.  The 8K cutoff is arbitrary.
 	 */
-	if (yyextra->scanbuflen >= 8192)
-		free(yyextra->scanbuf);
-	if (yyextra->literalalloc >= 8192)
-		free(yyextra->literalbuf);
-}
 
-
-char* remalloc(char* buf,int originLen,int len) {
-	char* newBuf = malloc(len);
-	memcpy(newBuf,buf,originLen);
-	free(buf);
-	return newBuf;
+	Allocator::free(yyextra->scanbuf);
+	Allocator::free(yyextra->literalbuf);
+	yylex_destroy(yyscanner);
+	// if (yyextra->scanbuflen >= 8192)
+	// 	free(yyextra->scanbuf);
+	// if (yyextra->literalalloc >= 8192)
+	// 	free(yyextra->literalbuf);
 }
 
 static void
@@ -799,7 +803,7 @@ addlit(char *ytext, int yleng, core_yyscan_t yyscanner)
 		{
 			yyextra->literalalloc *= 2;
 		} while ((yyextra->literallen + yleng) >= yyextra->literalalloc);
-		yyextra->literalbuf = (char *) remalloc(yyextra->literalbuf,yyextra->literallen,
+		yyextra->literalbuf = (char *) Allocator::remalloc(yyextra->literalbuf,
 												yyextra->literalalloc);
 	}
 	/* append new data */
@@ -815,7 +819,7 @@ addlitchar(unsigned char ychar, core_yyscan_t yyscanner)
 	if ((yyextra->literallen + 1) >= yyextra->literalalloc)
 	{
 		yyextra->literalalloc *= 2;
-		yyextra->literalbuf = (char *) remalloc(yyextra->literalbuf,yyextra->literallen,
+		yyextra->literalbuf = (char *) Allocator::remalloc(yyextra->literalbuf,
 												yyextra->literalalloc);
 	}
 	/* append new data */
@@ -833,8 +837,35 @@ litbufdup(core_yyscan_t yyscanner)
 	int			llen = yyextra->literallen;
 	char	   *newBuf;
 
-	newBuf = malloc(llen + 1);
+	newBuf = (char*)Allocator::malloc(llen + 1);
 	memcpy(newBuf, yyextra->literalbuf, llen);
 	newBuf[llen] = '\0';
 	return newBuf;
+}
+
+/*
+ * Interface functions to make flex use Allocator instead of malloc().
+ * It'd be better to make these static, but flex insists otherwise.
+ */
+
+void *
+core_yyalloc(yy_size_t bytes, core_yyscan_t yyscanner)
+{
+	return Allocator::malloc(bytes);
+}
+
+void *
+core_yyrealloc(void *ptr, yy_size_t bytes, core_yyscan_t yyscanner)
+{
+	if (ptr)
+		return Allocator::remalloc(ptr, bytes);
+	else
+		return Allocator::malloc(bytes);
+}
+
+void
+core_yyfree(void *ptr, core_yyscan_t yyscanner)
+{
+	if (ptr)
+		Allocator::free(ptr);
 }

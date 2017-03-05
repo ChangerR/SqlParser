@@ -1,14 +1,16 @@
 #ifndef __SQLPARSER_SQLNODE_H
 #define __SQLPARSER_SQLNODE_H
-#include <string>
 #include <vector>
-class SQLASTVisitor;
+#include "allocator.h"
+#include "SQLASTVisitor.h"
+
 class SQLNode {
 public:
     enum NodeType {
         EXPRESSION = 0,
         RESTARGET,
         COLUMNREF,
+        SELECT,
     };
 
     virtual ~SQLNode() {}
@@ -22,17 +24,24 @@ class CloumnRef : public SQLNode {
 public:
     CloumnRef() {}
 
-    virtual ~CloumnRef() {}
+    virtual ~CloumnRef() {
+        for( auto itr = fields.begin() ; itr != fields.end() ; ++itr) {
+            if ( *itr != NULL ) {
+                Allocator::free(*itr);
+            }
+        }
+    }
 
     virtual void accept(SQLASTVisitor* visitor) {
-        //TODO:fix this accept
+        visitor->visit(this);
+        visitor->endVisit(this);
     }
 
     virtual NodeType getNodeType() {
         return COLUMNREF;
     }
 public:
-    std::vector<std::string> fields;
+    std::vector<char*> fields;
 };
 
 class Expression : public SQLNode {
@@ -41,11 +50,14 @@ public:
         AEXPR_OP,
     };
 
-    Expression() {
+    Expression() : name(NULL),lexpr(NULL),rexpr(NULL) {
        
     }
 
     virtual ~Expression(){
+        if ( name != NULL) {
+            Allocator::free(name);
+        }
         if ( lexpr != NULL ) {
             delete lexpr;
         }
@@ -55,7 +67,11 @@ public:
     }
 
     virtual void accept(SQLASTVisitor* visitor) {
-        //TODO:fix this accept
+        if ( visitor->visit(this) ) {
+            lexpr->accept(visitor);
+            rexpr->accept(visitor);
+        }
+        visitor->endVisit(this);
     }
 
     virtual NodeType getNodeType() {
@@ -64,23 +80,29 @@ public:
     
 public:
     Kind kind;
-    std::string name;
+    char* name;
     Expression* lexpr;
     Expression* rexpr;
 };
 
 class ResTarget : public SQLNode {
 public:
-    ResTarget(SQLNode* val,const std::string& name) :val(val),name(name){}
+    ResTarget(SQLNode* val,char* name) :val(val),name(name){}
     
     virtual ~ResTarget() {
         if ( val != NULL ) {
             delete val;
         }
+        if ( name != NULL ) {
+            Allocator::free(name);
+        }
     }
 
     virtual void accept(SQLASTVisitor* visitor) {
-        //TODO:fix this accept
+        if ( visitor->visit(this) ) {
+            val->accept(visitor);
+        }
+        visitor->endVisit(this);
     }
 
     virtual NodeType getNodeType() {
@@ -88,7 +110,9 @@ public:
     }
 public:
     SQLNode* val;
-    std::string name;
+    char* name;
 };
+
+typedef std::vector<SQLNode*> List;
 
 #endif

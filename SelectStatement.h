@@ -7,16 +7,33 @@ class SelectStatement : public SingleStatement
 {
 public:
     SelectStatement(){}
-    virtual ~SelectStatement(){}
-
-    virtual void accept(SQLASTVisitor visitor) {
-        //TODO:fix this accept
+    
+    virtual ~SelectStatement() {
+        if ( opt_target_list != NULL ) {
+            for ( auto itr = opt_target_list->begin(); itr != opt_target_list->end(); ++itr ) {
+                delete *itr;
+            }
+            delete opt_target_list;
+        }
+    }
+    
+    virtual void accept(SQLASTVisitor* visitor) {
+        if ( visitor->visit(this) ) {
+            for ( auto itr = opt_target_list->begin() ; itr != opt_target_list->end() ; ++itr) {
+                (*itr)->accept(visitor);
+            }
+        }
+        visitor->endVisit(this);
     }
 
     virtual const std::string getSQLType() const {
         return "SELECT";
     }
+
+    virtual NodeType getNodeType() {
+        return SELECT;
+    }
 public:
-    std::vector<SQLNode*> * opt_target_list;
+    List * opt_target_list;
 };
 #endif

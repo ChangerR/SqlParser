@@ -5,10 +5,9 @@
 #include <stdio.h>
 #include <string>
 #include <vector>
+
 #include "gramparser.h"
-#include "SQLNode.h"
-#include "StatementBlock.h"
-#include "SingleStatement.h"
+
 
 #define YYLLOC_DEFAULT(Current, Rhs, N) \
 	do { \
@@ -17,8 +16,6 @@
 		else \
 			(Current) = (-1); \
 	} while (0)
-
-typedef std::vector<SQLNode*> List;
 
 static void base_yyerror(YYLTYPE *yylloc, core_yyscan_t yyscanner,
 						 const char *msg);
@@ -46,9 +43,13 @@ inline List* lappend(List* list,SQLNode* node) {
 %lex-param   {core_yyscan_t yyscanner}
 
 %union {
+    core_YYSTYPE		core_yystype;
+
+    /* these fields must match core_YYSTYPE: */
     char* str;
     const char* keyword;
     int ival;
+
     SQLNode* node;
     List* list;
     ResTarget* target;
@@ -106,8 +107,9 @@ SelectStmt: simple_selectstmt                       { $$ = $1; }
 simple_selectstmt:
             K_SELECT opt_target_list
             {
-                $$ = new SelectStatement();
-                $$->opt_target_list = $2;
+                SelectStatement* stmt = new SelectStatement();
+                stmt->opt_target_list = $2;
+                $$ = stmt;
             }
             ;
 
@@ -126,7 +128,10 @@ target_el:
             | '*'
             {
                 CloumnRef* ref = new CloumnRef();
-                ref->fields.push_back("*");
+                char* buf = (char*)Allocator::malloc(8);
+                buf[0] = '*';
+                buf[1] = 0;
+                ref->fields.push_back(buf);
                 $$ = new ResTarget(ref,NULL);
             }
             ;
@@ -154,12 +159,12 @@ ColId:
 static void
 base_yyerror(YYLTYPE *yylloc, core_yyscan_t yyscanner, const char *msg)
 {
-	printf(msg);
+	printf("base_yyerror:%s pos:%d\n",msg,*yylloc);
 }
 
 StatementBlock* make_stmt_block(SingleStatement* single_statement) {
     StatementBlock* block = new StatementBlock();
-    block->push(block);
+    block->push(single_statement);
     return block;
 }
 

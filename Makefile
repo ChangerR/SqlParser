@@ -1,23 +1,26 @@
 SRCTREE?= $(shell pwd)
 CXX:=g++
 OPTIMIZATION?=-O2
-WARNINGS=-Wall
+WARNINGS=-Wall -Wno-deprecated-register
 DEBUG?= -g -ggdb -DDEBUG=1
 LEX=flex
 YACC=bison
-INCLUDE=
-REAL_CFLAGS= $(OPTIMIZATION) $(WARNINGS) $(DEBUG) $(INCLUDE) -c
+INCLUDE= -I$(SRCTREE)/build/include
+REAL_CFLAGS= -std=c++11 $(OPTIMIZATION) $(WARNINGS) $(DEBUG) $(INCLUDE) -c
+LKFALG= -L$(SRCTREE)/build/lib -ltcmalloc
 
 .PHONY: all clean
 
 CPPS = sql.cpp scan.cpp
-OBJS = keywords.o sql.o scan.o parser.o
+OBJS = allocator.o keywords.o sql.o scan.o parser.o main.o
 
-all:$(OBJS)
-	echo "HAHA"
-	
+all:main
+
+main:$(OBJS)
+	$(CXX) -o $@ $(LKFALG) $(OBJS)
+
 clean:
-	rm $(OBJS) sql.cpp sql.hpp scan.cpp
+	rm $(OBJS) sql.cpp sql.hpp scan.cpp *.d *.d.*
 
 %.o:%.cpp
 	$(CXX) $(REAL_CFLAGS) -o $@ $<
@@ -27,7 +30,14 @@ clean:
 
 %.cpp:%.yy
 	$(YACC) -d -o $@ $<
-	
+
+%.d:%.cpp
+	@set -e; rm -f $@; $(CC) -MM $< $(INCLUDE) > $@.$$$$; \
+	sed 's,\($*\)\.o[ :]*,\1.o $@ : ,g' < $@.$$$$ > $@; \
+	rm -f $@.$$$$
+
+-include $(OBJS:.o=.d)
+
 sql.hpp:sql.cpp
 sql.o:sql.cpp
 scan.o:scan.cpp

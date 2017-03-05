@@ -78,9 +78,9 @@ typedef union core_YYSTYPE
 #define YYLTYPE  int 
 
 /*
- * Set the type of YYSTYPE.
+ * The type of yyscanner is opaque outside scan.l.
  */
-#define YYSTYPE core_YYSTYPE
+typedef void *core_yyscan_t;
 
 extern core_yyscan_t scanner_init(const char *str,
 			 core_yy_extra_type *yyext,
@@ -89,5 +89,9 @@ extern core_yyscan_t scanner_init(const char *str,
 
 extern void scanner_finish(core_yyscan_t yyscanner);
 
+extern int core_yylex(core_YYSTYPE *lvalp, YYLTYPE *llocp,
+		   core_yyscan_t yyscanner);
+
+extern void scanner_yyerror(const char *message, core_yyscan_t yyscanner);
 
 #endif
