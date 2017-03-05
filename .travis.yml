@@ -1,0 +1,15 @@
+language:cpp
+compiler:
+- clang++
+os:
+- osx
+
+before_install:
+- brew install automake
+- make
+
+scrpit: ./main
+
+branches:
+  only:
+  - master
