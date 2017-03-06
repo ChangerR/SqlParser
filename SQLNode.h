@@ -10,7 +10,9 @@ public:
         EXPRESSION = 0,
         RESTARGET,
         COLUMNREF,
-        SELECT,
+        SELECT_STMT,
+        STRING,
+        TABLE
     };
 
     virtual ~SQLNode() {}
@@ -18,6 +20,55 @@ public:
     virtual void accept(SQLASTVisitor* visitor) = 0;
 
     virtual NodeType getNodeType() = 0;
+};
+
+class SQLString :public SQLNode {
+public:
+    SQLString(char * string) :string(string){}
+
+    virtual ~SQLString() {
+        if (string != NULL ) {
+            Allocator::free(string);
+        }
+    }
+
+    virtual void accept(SQLASTVisitor* visitor) {
+        visitor->visit(this);
+        visitor->endVisit(this);
+    }
+
+    virtual NodeType getNodeType() {
+        return STRING;
+    }
+public:
+    char* string;
+};
+
+class SQLTable : public SQLNode {
+public:
+    SQLTable(char* schema,char* table) :schema(schema),table(table),alias(NULL){}
+
+    virtual ~SQLTable() {
+        if ( schema ) {
+            Allocator::free(schema);
+        }
+        if ( table ) {
+            Allocator::free(table);
+        }
+    }
+
+     virtual void accept(SQLASTVisitor* visitor) {
+        visitor->visit(this);
+        visitor->endVisit(this);
+    }
+
+    virtual NodeType getNodeType() {
+        return TABLE;
+    }
+public:
+    char* schema;
+    char* table;
+    char* alias;
 };
 
 class CloumnRef : public SQLNode {

@@ -4,6 +4,8 @@ class CloumnRef;
 class Expression;
 class ResTarget;
 class SelectStatement;
+class SQLString;
+class SQLTable;
 
 class SQLASTVisitor{
 public:
@@ -24,6 +26,13 @@ public:
     virtual bool visit(SelectStatement* select) = 0;
 
     virtual void endVisit(SelectStatement* select) = 0;
+
+    virtual bool visit(SQLString* string) = 0;
+
+    virtual void endVisit(SQLString* string) = 0;
     
+    virtual bool visit(SQLTable* table) = 0;
+
+    virtual void endVisit(SQLTable* table) = 0;
 };
 #endif

@@ -60,11 +60,41 @@ public:
             }
             output_.pop_back();
         }
+        if ( select->from_list != NULL ) {
+            output_.append(" FROM ");
+            for ( auto itr = select->from_list->begin(); itr != select->from_list->end();++itr) {
+                (*itr)->accept(this);
+                output_.push_back(',');
+            }
+            output_.pop_back();
+        }
         return false;
     }
 
     virtual void endVisit(SelectStatement* select) {
         
+    }
+
+    virtual bool visit(SQLString* string) {
+        output_.append(string->string);
+        return false;
+    }
+
+    virtual void endVisit(SQLString* string) {
+
+    }
+
+    virtual bool visit(SQLTable* table) {
+        if(table->schema) {
+            output_.append(table->schema);
+            output_.push_back('.');
+        }
+        output_.append(table->table);
+        return false;
+    }
+
+    virtual void endVisit(SQLTable* table) {
+
     }
 private:
     std::string output_;

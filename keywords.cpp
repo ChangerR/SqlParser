@@ -47,7 +47,7 @@ ScanKeywordLookup(const char *text,
 	 */
 	for (i = 0; i < len; i++)
 	{
-		char		ch = text[i];
+		char ch = text[i];
 
 		if (ch >= 'A' && ch <= 'Z')
 			ch += 'a' - 'A';

@@ -22,6 +22,8 @@ static void base_yyerror(YYLTYPE *yylloc, core_yyscan_t yyscanner,
 
 static StatementBlock* make_stmt_block(SingleStatement* single_statement);
 
+static void release_list_object(List* list);
+
 inline List* list_make1(SQLNode* node) {
     List* list = new List();
     list->push_back(node);
@@ -59,15 +61,17 @@ inline List* lappend(List* list,SQLNode* node) {
 
 %type <block> stmtblock
 %type <stmt> single_statement SelectStmt simple_selectstmt
-%type <node> a_expr columnref
-%type <str> ColLabel ColId
+%type <node> a_expr columnref indirection_el qualified_name relation_expr table_ref
+%type <str> ColLabel ColId attr_name opt_alias_clause alias_clause
 %type <target> target_el
-%type <list> opt_target_list target_list 
+%type <list> opt_target_list target_list from_clause from_list indirection
 %token <str> IDENT FCONST SCONST BCONST XCONST Op
 %token <ival>	ICONST PARAM
 %token			DOT_DOT
 %token			LESS_EQUALS GREATER_EQUALS NOT_EQUALS
-%token <keyword> K_SELECT K_FROM K_WHERE K_AS
+%type <keyword> unreserved_keyword type_func_name_keyword
+%type <keyword> col_name_keyword reserved_keyword
+%token <keyword> SELECT FROM WHERE AS
 
 %%
 stmtmuti: stmtblock 
@@ -105,13 +109,20 @@ SelectStmt: simple_selectstmt                       { $$ = $1; }
             ;
 
 simple_selectstmt:
-            K_SELECT opt_target_list
+            SELECT opt_target_list from_clause
             {
                 SelectStatement* stmt = new SelectStatement();
                 stmt->opt_target_list = $2;
+                stmt->from_list = $3;
                 $$ = stmt;
             }
             ;
+
+/*****************************************************************************
+ *
+ *	target list for SELECT
+ *
+ *****************************************************************************/
 
 opt_target_list: target_list						{ $$ = $1; }
 			| /* EMPTY */							{ $$ = NULL; }
@@ -123,7 +134,7 @@ target_list:
 		    ;
 
 target_el:
-            a_expr K_AS ColLabel                    { $$ = new ResTarget($1,$3); }
+            a_expr AS ColLabel                    { $$ = new ResTarget($1,$3); }
             | a_expr                                { $$ = new ResTarget($1,NULL); }
             | '*'
             {
@@ -147,12 +158,160 @@ columnref:  ColId
             }
             ;
 
+indirection_el:
+			'.' attr_name
+				{
+					$$ = new SQLString($2);
+				}
+            ;
+
+indirection:
+			indirection_el							{ $$ = list_make1($1); }
+			| indirection indirection_el			{ $$ = lappend($1, $2); }
+		    ;
+
+/*****************************************************************************
+ *
+ *	clauses common to all Optimizable Stmts:
+ *		from_clause		- allow list of both JOIN expressions and table names
+ *		where_clause	- qualifications for joins or restrictions
+ *
+ *****************************************************************************/
+
+from_clause:
+			FROM from_list							{ $$ = $2; }
+			| /*EMPTY*/								{ $$ = NULL; }
+		;
+
+from_list:
+			table_ref								{ $$ = list_make1($1); }
+			| from_list ',' table_ref				{ $$ = lappend($1, $3); }
+		;
+
+/*
+ * table_ref is where an alias clause can be attached.
+ */
+table_ref:	relation_expr opt_alias_clause
+            {
+                ((SQLTable*)$1)->alias = $2;
+                $$ = $1;
+            }
+            ;
+
+relation_expr:
+			qualified_name
+            {
+                /* default inheritance */
+                $$ = $1;
+                ((SQLTable*)$$)->alias = NULL;
+            }
+            ;
+
+alias_clause: ColId                                 { $$ = $1;}
+            ;
+
+opt_alias_clause: alias_clause						{ $$ = $1; }
+			| /*EMPTY*/								{ $$ = NULL; }
+		;
+
+/*****************************************************************************
+ *
+ *	Names and constants
+ *
+ *****************************************************************************/
+
+/*
+ * The production for a qualified relation name has to exactly match the
+ * production for a qualified func_name, because in a FROM clause we cannot
+ * tell which we are parsing until we see what comes after it ('(' for a
+ * func_name, something else for a relation). Therefore we allow 'indirection'
+ * which may contain subscripts, and reject that case in the C code.
+ */
+qualified_name:
+			ColId
+            {
+                $$ = new SQLTable(NULL, $1);
+            }
+			| ColId indirection 
+            {
+                SQLTable* table = new SQLTable(NULL,NULL);
+                $$ = table;
+                if ( $2->size() > 0 ) {
+                    table->schema = $1;
+                    table->table = ((SQLString*)$2->back())->string;
+                    ((SQLString*)$2->back())->string = NULL;
+                    release_list_object($2);
+                } 
+            };
+
+attr_name:	ColLabel								{ $$ = $1; };
+
 ColLabel:
             IDENT                                   { $$ = $1; }
             ;
 
 ColId:
             IDENT                                   { $$ = $1; }
+            ;
+
+/*
+ * Keyword category lists.  Generally, every keyword present in
+ * the Postgres grammar should appear in exactly one of these lists.
+ *
+ * Put a new keyword into the first list that it can go into without causing
+ * shift or reduce conflicts.  The earlier lists define "less reserved"
+ * categories of keywords.
+ *
+ * Make sure that each keyword's category in kwlist.h matches where
+ * it is listed here.  (Someday we may be able to generate these lists and
+ * kwlist.h's table from a common master list.)
+ */
+
+/* "Unreserved" keywords --- available for use as any kind of name.
+ */
+unreserved_keyword:
+            /* EMPTY */
+            ;
+
+/* Column identifier --- keywords that can be column, table, etc names.
+ *
+ * Many of these keywords will in fact be recognized as type or function
+ * names too; but they have special productions for the purpose, and so
+ * can't be treated as "generic" type or function names.
+ *
+ * The type names appearing here are not usable as function names
+ * because they can be followed by '(' in typename productions, which
+ * looks too much like a function call for an LR(1) parser.
+ */
+col_name_keyword:
+            /* EMPTY */
+            ;
+
+/* Type/function identifier --- keywords that can be type or function names.
+ *
+ * Most of these are keywords that are used as operators in expressions;
+ * in general such keywords can't be column names because they would be
+ * ambiguous with variables, but they are unambiguous as function identifiers.
+ *
+ * Do not include POSITION, SUBSTRING, etc here since they have explicit
+ * productions in a_expr to support the goofy SQL9x argument syntax.
+ * - thomas 2000-11-28
+ */
+type_func_name_keyword:
+            /* EMPTY */
+            ;
+
+/* Reserved keyword --- these keywords are usable only as a ColLabel.
+ *
+ * Keywords appear here if they could not be distinguished from variable,
+ * type, or function names in some contexts.  Don't put things here unless
+ * forced to.
+ */
+reserved_keyword:
+            SELECT
+            | AS
+            | WHERE
+            | FROM
             ;
 %%
 
@@ -175,4 +334,13 @@ void
 parser_init(base_yy_extra_type *yyext)
 {
 	yyext->block = NULL;		/* in case grammar forgets to set it */
+}
+
+static void release_list_object(List* list) {
+    if ( list ) {
+        for ( auto itr = list->begin(); itr != list->end() ; ++ itr) {
+            delete (*itr);
+        }
+        delete list;
+    }
 }

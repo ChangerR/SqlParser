@@ -3,7 +3,7 @@ CC?=gcc
 CXX?=g++
 OPTIMIZATION?=-O2
 WARNINGS=-Wall -Wno-deprecated-register
-DEBUG?= -g -ggdb -DDEBUG=1
+DEBUG?= -g -ggdb -DDEBUG=1 -DYYDEBUG=1
 LEX=flex
 YACC=bison
 INCLUDE= -I$(SRCTREE)/build/include
@@ -20,7 +20,7 @@ main:$(OBJS)
 	$(CXX) -o $@ $(LKFALG) $(OBJS)
 
 clean:
-	-rm $(OBJS) sql.cpp sql.hpp scan.cpp *.d *.d.*
+	-rm $(OBJS) sql.cpp sql.hpp scan.cpp *.d sql.output
 
 %.o:%.cpp
 	$(CXX) $(REAL_CFLAGS) -o $@ $<
@@ -29,7 +29,7 @@ clean:
 	$(LEX) -CF -o $@ $<
 
 %.cpp:%.yy
-	$(YACC) -d -o $@ $<
+	$(YACC) --debug --report=itemset -d -o $@ $<
 
 $(SRCTREE)/build/include/gperftools/tcmalloc.h:
 	cd $(SRCTREE)/3rd/gperftools && ./autogen.sh && ./configure --prefix=$(SRCTREE)/build && make install

@@ -31,9 +31,10 @@ public:
     }
 
     virtual NodeType getNodeType() {
-        return SELECT;
+        return SELECT_STMT;
     }
 public:
     List * opt_target_list;
+    List * from_list;
 };
 #endif

@@ -4,9 +4,11 @@ test
 test.l
 sql.hpp
 sql.cpp
+scan.cpp
 .DS_Store
 /build/
 *.o
 *.d
 *.d.*
 main
+sql.output

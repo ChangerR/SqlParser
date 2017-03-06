@@ -75,6 +75,8 @@ base_yylex(YYSTYPE *lvalp, YYLTYPE *llocp, core_yyscan_t yyscanner)
 	else
 		cur_token = core_yylex(&(lvalp->core_yystype), llocp, yyscanner);
 
+	//printf ("TOKEN type=%d VALUE=%s\n",cur_token,lvalp->str);
+
 	/*
 	 * If this token isn't one that requires lookahead, just return it.  If it
 	 * does, determine the token length.  (We could get that via strlen(), but
