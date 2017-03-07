@@ -20,7 +20,7 @@ public:
     virtual bool visit(CloumnRef* ref) {
         for(auto itr = ref->fields.begin(); itr != ref->fields.end(); ++itr) {
             output_.append(*itr);
-            output_.push_back(' ');
+            output_.push_back('.');
         }
         output_.pop_back();
         return false;
@@ -101,6 +101,24 @@ public:
     }
 
     virtual void endVisit(SQLTable* table) {
+
+    }
+
+    virtual bool visit(StatementBlock* block) {
+        
+        if ( block != NULL ) {
+            for ( auto itr = block->getStmts().begin(); itr != block->getStmts().end(); ++itr) {
+                (*itr)->accept(this);
+                output_.push_back(';');
+                output_.push_back('\n');
+            }
+            output_.pop_back();
+            output_.pop_back();
+        }
+        return false;
+    }
+
+    virtual void endVisit(StatementBlock* block) {
 
     }
 private:

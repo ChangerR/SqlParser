@@ -23,6 +23,7 @@ static void base_yyerror(YYLTYPE *yylloc, core_yyscan_t yyscanner,
 static StatementBlock* make_stmt_block(SingleStatement* single_statement);
 
 static void release_list_object(List* list);
+static char* sql_strdup(const char* source);
 
 inline List* list_make1(SQLNode* node) {
     List* list = new List();
@@ -71,7 +72,7 @@ inline List* lappend(List* list,SQLNode* node) {
 %token			LESS_EQUALS GREATER_EQUALS NOT_EQUALS
 %type <keyword> unreserved_keyword type_func_name_keyword
 %type <keyword> col_name_keyword reserved_keyword
-%token <keyword> SELECT FROM WHERE AS
+%token <keyword> SELECT FROM WHERE AS SET INT LEFT LIKE RIGHT
 
 %%
 stmtmuti: stmtblock 
@@ -154,6 +155,18 @@ columnref:  ColId
             {
                 CloumnRef* ref = new CloumnRef();
                 ref->fields.push_back($1);
+                $$ = ref;
+            }
+            | ColId indirection
+            {
+                CloumnRef* ref = new CloumnRef();
+                ref->fields.push_back($1);
+
+                for ( auto itr = $2->begin() ; itr != $2->end() ; ++itr) {
+                    ref->fields.push_back(((SQLString*)(*itr))->string);
+                    ((SQLString*)(*itr))->string = NULL;
+                }
+                delete $2;
                 $$ = ref;
             }
             ;
@@ -248,12 +261,17 @@ attr_name:	ColLabel								{ $$ = $1; };
 
 ColLabel:
             IDENT                                   { $$ = $1; }
-            ;
+            | unreserved_keyword					{ $$ = sql_strdup($1); }
+			| col_name_keyword						{ $$ = sql_strdup($1); }
+			| type_func_name_keyword				{ $$ = sql_strdup($1); }
+			| reserved_keyword						{ $$ = sql_strdup($1); }
+		;
 
 ColId:
             IDENT                                   { $$ = $1; }
-            ;
-
+            | unreserved_keyword					{ $$ = sql_strdup($1); }
+			| col_name_keyword						{ $$ = sql_strdup($1); }
+		;
 /*
  * Keyword category lists.  Generally, every keyword present in
  * the Postgres grammar should appear in exactly one of these lists.
@@ -270,7 +288,7 @@ ColId:
 /* "Unreserved" keywords --- available for use as any kind of name.
  */
 unreserved_keyword:
-            /* EMPTY */
+            SET
             ;
 
 /* Column identifier --- keywords that can be column, table, etc names.
@@ -284,7 +302,7 @@ unreserved_keyword:
  * looks too much like a function call for an LR(1) parser.
  */
 col_name_keyword:
-            /* EMPTY */
+            INT
             ;
 
 /* Type/function identifier --- keywords that can be type or function names.
@@ -298,7 +316,9 @@ col_name_keyword:
  * - thomas 2000-11-28
  */
 type_func_name_keyword:
-            /* EMPTY */
+            LEFT
+            | RIGHT
+            | LIKE
             ;
 
 /* Reserved keyword --- these keywords are usable only as a ColLabel.
@@ -343,4 +363,15 @@ static void release_list_object(List* list) {
         }
         delete list;
     }
+}
+
+char* sql_strdup(const char* source) {
+    if ( source ) {
+        int length = strlen(source);
+        char* dup = (char*)Allocator::malloc(length + 1);
+        strncpy(dup,source,length);
+        dup[length] = 0;
+        return dup;
+    }
+    return NULL;
 }

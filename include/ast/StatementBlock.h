@@ -17,11 +17,17 @@ public:
     }
 
     void accept(SQLASTVisitor* visitor) {
-        for (auto itr = stmts_.begin();itr != stmts_.end(); ++itr) {
-            (*itr)->accept(visitor);
+        if ( visitor->visit(this) ) {
+            for (auto itr = stmts_.begin();itr != stmts_.end(); ++itr) {
+                (*itr)->accept(visitor);
+            }
         }
+        visitor->endVisit(this);
     }
 
+    const std::vector<SingleStatement*>& getStmts() const {
+        return stmts_;
+    }
 private:
     std::vector<SingleStatement*> stmts_;
 };

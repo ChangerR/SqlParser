@@ -6,6 +6,7 @@ class ResTarget;
 class SelectStatement;
 class SQLString;
 class SQLTable;
+class StatementBlock;
 
 class SQLASTVisitor{
 public:
@@ -34,5 +35,9 @@ public:
     virtual bool visit(SQLTable* table) = 0;
 
     virtual void endVisit(SQLTable* table) = 0;
+
+    virtual bool visit(StatementBlock* block) = 0;
+
+    virtual void endVisit(StatementBlock* block) = 0;
 };
 #endif
