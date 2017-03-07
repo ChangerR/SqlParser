@@ -8,8 +8,8 @@ LEX=flex
 YACC=bison
 INCLUDE= -I$(SRCTREE)/build/include
 REAL_CFLAGS= -std=c++11 $(OPTIMIZATION) $(WARNINGS) $(DEBUG) $(INCLUDE) -c
-LKFALG= -L$(SRCTREE)/build/lib -ltcmalloc
-
+LKFALG= -L$(SRCTREE)/build/lib
+LDLIB = -ltcmalloc
 .PHONY: all clean
 
 OBJS = allocator.o keywords.o parser.o main.o scan.o sql.o 
@@ -17,7 +17,7 @@ OBJS = allocator.o keywords.o parser.o main.o scan.o sql.o
 all:main
 
 main:$(OBJS)
-	$(CXX) -o $@ $(LKFALG) $(OBJS)
+	$(CXX) $(LKFALG) $(OBJS) $(LDLIB) -o $@
 
 clean:
 	-rm $(OBJS) sql.cpp sql.hpp scan.cpp *.d sql.output
