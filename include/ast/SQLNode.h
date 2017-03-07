@@ -2,7 +2,7 @@
 #define __SQLPARSER_SQLNODE_H
 #include <vector>
 #include "allocator.h"
-#include "SQLASTVisitor.h"
+#include "visitor/SQLASTVisitor.h"
 
 class SQLNode {
 public:

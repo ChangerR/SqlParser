@@ -1,7 +1,7 @@
 /.vscode
-lex.yy.c
-test
-test.l
+test/lex.yy.c
+test/test
+test/test.l
 sql.hpp
 sql.cpp
 scan.cpp
@@ -12,3 +12,5 @@ scan.cpp
 *.d.*
 main
 sql.output
+libsqlparser.*
+testparser

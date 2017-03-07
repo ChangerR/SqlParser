@@ -1,6 +1,7 @@
 #ifndef __SQLPARSER_SQLOUTPUTVISITOR_H
 #define __SQLPARSER_SQLOUTPUTVISITOR_H
 #include <string>
+#include "SQLASTVisitor.h"
 
 class SQLOutputVisitor :public SQLASTVisitor{
 public:
@@ -90,6 +91,12 @@ public:
             output_.push_back('.');
         }
         output_.append(table->table);
+
+        if ( table->alias ) {
+            output_.push_back(' ');
+            output_.append(table->alias);
+        }
+
         return false;
     }
 

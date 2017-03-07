@@ -1,9 +1,9 @@
 #ifndef __SQLPARSER_GRAMPARSER_H
 #define __SQLPARSER_GRAMPARSER_H
-#include "SQLNode.h"
-#include "SingleStatement.h"
-#include "SelectStatement.h"
-#include "StatementBlock.h"
+#include "ast/SQLNode.h"
+#include "ast/SingleStatement.h"
+#include "ast/SelectStatement.h"
+#include "ast/StatementBlock.h"
 #include "scanner.h"
 #include "sql.hpp"
 

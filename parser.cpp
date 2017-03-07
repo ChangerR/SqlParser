@@ -7,7 +7,7 @@
  *
  * Returns a list of raw (un-analyzed) parse trees.
  */
-StatementBlock *
+__cdecl StatementBlock *
 raw_parser(const char *str)
 {
 	core_yyscan_t yyscanner;

@@ -1,10 +1,10 @@
 #include "gramparser.h"
 #include "parser.h"
-#include "SQLOutputVisitor.h"
+#include "visitor/SQLOutputVisitor.h"
 #include <stdio.h>
 
 int main(int args,char** argv   ) {
-    StatementBlock* block = raw_parser("select hello as t,kk,lo from test");
+    StatementBlock* block = raw_parser("select hello as t/* this is a eample */,kk,lo from \"test\" t,teo");
     if ( block != NULL ) {
          SQLOutputVisitor* visitor = new SQLOutputVisitor();
         block->accept(visitor);

@@ -15,6 +15,6 @@ extern bool standard_conforming_strings;
 
 
 /* Primary entry point for the raw parsing functions */
-extern StatementBlock *raw_parser(const char *str);
+extern __cdecl StatementBlock *raw_parser(const char *str);
 
 #endif
