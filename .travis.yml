@@ -11,7 +11,7 @@ os:
 before_install:
 - env CXX=g++-4.9 make
 
-script: ./main
+script: env LD_LIBRARY_PATH=$(pwd)/build/lib ./main
 
 branches:
   only:
