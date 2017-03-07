@@ -7,7 +7,7 @@ DEBUG?= -g -ggdb -DDEBUG=1 -DYYDEBUG=1
 LEX=flex
 YACC=bison
 INCLUDE= -Iinclude -I$(SRCTREE)/build/include
-REAL_CFLAGS= -std=c++11 $(OPTIMIZATION) $(WARNINGS) $(DEBUG) $(INCLUDE) -c
+REAL_CFLAGS= -std=c++11 -fPIC $(OPTIMIZATION) $(WARNINGS) $(DEBUG) $(INCLUDE) -c
 LKFALG= -L$(SRCTREE)/build/lib -L$(SRCTREE)
 LDLIB = -ltcmalloc
 OS = $(shell uname -s)
