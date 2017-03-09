@@ -99,16 +99,18 @@ class Expression : public SQLNode {
 public:
     enum Kind {
         AEXPR_OP,
+        AND_EXPR,
+        OR_EXPR
     };
 
     Expression() : name(NULL),lexpr(NULL),rexpr(NULL) {
-       
+       kind = AEXPR_OP;
     }
 
+    Expression(Kind kind,const char* op,SQLNode* lexpr,SQLNode* rexpr) :
+        kind(kind),name(op),lexpr(lexpr),rexpr(rexpr) {}
+
     virtual ~Expression(){
-        if ( name != NULL) {
-            Allocator::free(name);
-        }
         if ( lexpr != NULL ) {
             delete lexpr;
         }
@@ -131,9 +133,9 @@ public:
     
 public:
     Kind kind;
-    char* name;
-    Expression* lexpr;
-    Expression* rexpr;
+    const char* name;
+    SQLNode* lexpr;
+    SQLNode* rexpr;
 };
 
 class ResTarget : public SQLNode {

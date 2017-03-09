@@ -69,6 +69,11 @@ public:
             }
             output_.pop_back();
         }
+
+        if ( select->where_caluse != NULL ) {
+            output_.append(" WHERE ");
+            select->where_caluse->accpet(this);
+        }
         return false;
     }
 

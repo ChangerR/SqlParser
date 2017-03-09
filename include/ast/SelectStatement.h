@@ -22,6 +22,9 @@ public:
             for ( auto itr = opt_target_list->begin() ; itr != opt_target_list->end() ; ++itr) {
                 (*itr)->accept(visitor);
             }
+            if ( where_caluse != NULL ) {
+                where_caluse->accept(visitor);
+            }
         }
         visitor->endVisit(this);
     }
@@ -36,5 +39,6 @@ public:
 public:
     List * opt_target_list;
     List * from_list;
+    SQLNode* where_caluse;
 };
 #endif

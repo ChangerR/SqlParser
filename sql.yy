@@ -64,6 +64,7 @@ inline List* lappend(List* list,SQLNode* node) {
 %type <block> stmtblock
 %type <stmt> single_statement SelectStmt simple_selectstmt
 %type <node> a_expr columnref indirection_el qualified_name relation_expr table_ref
+             where_clause
 %type <str> ColLabel ColId attr_name opt_alias_clause alias_clause
 %type <target> target_el
 %type <list> opt_target_list target_list from_clause from_list indirection
@@ -74,7 +75,14 @@ inline List* lappend(List* list,SQLNode* node) {
 %type <keyword> unreserved_keyword type_func_name_keyword
 %type <keyword> col_name_keyword reserved_keyword
 %token <keyword> SELECT FROM WHERE AS SET INT LEFT LIKE RIGHT
+                 OR AND
 
+%left           OR
+%left           AND
+%nonassoc       '<' '>' '=' LESS_EQUALS GREATER_EQUALS NOT_EQUALS
+%left           '+' '-'
+%left           '*' '/' '%'
+%left           '.'
 %%
 stmtmuti: stmtblock 
             {
@@ -111,7 +119,7 @@ SelectStmt: simple_selectstmt                       { $$ = $1; }
             ;
 
 simple_selectstmt:
-            SELECT opt_target_list from_clause
+            SELECT opt_target_list from_clause where_clause
             {
                 SelectStatement* stmt = new SelectStatement();
                 stmt->opt_target_list = $2;
@@ -150,6 +158,26 @@ target_el:
             ;
 
 a_expr:     columnref                               { $$ = $1; }
+            | a_expr '+' a_expr                     
+                { $$ = new Expression(Expression::AEXPR_OP,"+",$1,$3); }
+            | a_expr '-' a_expr
+                { $$ = new Expression(Expression::AEXPR_OP,"-",$1,$3); }
+            | a_expr '*' a_expr
+                { $$ = new Expression(Expression::AEXPR_OP,"*",$1,$3); }
+            | a_expr '/' a_expr
+                { $$ = new Expression(Expression::AEXPR_OP,"/",$1,$3); }
+            | a_expr '%' a_expr
+                { $$ = new Expression(Expression::AEXPR_OP,"%",$1,$3); }
+            | a_expr '=' a_expr
+                { $$ = new Expression(Expression::AEXPR_OP,"=",$1,$3); }
+            | a_expr '<' a_expr
+                { $$ = new Expression(Expression::AEXPR_OP,"<",$1,$3); }
+            | a_expr '>' a_expr
+                { $$ = new Expression(Expression::AEXPR_OP,">",$1,$3); }
+            | a_expr AND a_expr
+                { $$ = new Expression(Expression::AND_EXPR,NULL,$1,$3); }
+            | a_expr OR a_expr
+                { $$ = new Expression(Expression::OR_EXPR,NULL,$1,$3); }
             ;
 
 columnref:  ColId
@@ -202,6 +230,10 @@ from_list:
 			| from_list ',' table_ref				{ $$ = lappend($1, $3); }
 		;
 
+where_clause:
+			WHERE a_expr							{ $$ = $2; }
+			| /*EMPTY*/								{ $$ = NULL; }
+		;
 /*
  * table_ref is where an alias clause can be attached.
  */
