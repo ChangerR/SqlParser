@@ -31,6 +31,26 @@ public:
     }
 
     virtual bool visit(Expression* expr) {
+
+        if ( expr->lexpr ) {
+            expr->lexpr->accept(this);
+            output_.push_back(' ');
+        }
+
+        if ( expr->kind == Expression::AEXPR_OP) {         
+            output_.append(expr->name);
+            output_.push_back(' ');  
+        } else if ( expr->kind == Expression::AND_EXPR ) {
+            output_.append("AND ");
+        } else if ( expr->kind == Expression::OR_EXPR ) {
+            output_.append("OR ");
+        }
+
+        if ( expr->rexpr ) {
+            expr->rexpr->accept(this);
+            output_.push_back(' ');
+        }
+        output_.pop_back();
         return false;
     }
 
@@ -70,9 +90,9 @@ public:
             output_.pop_back();
         }
 
-        if ( select->where_caluse != NULL ) {
+        if ( select->where_clause != NULL ) {
             output_.append(" WHERE ");
-            select->where_caluse->accpet(this);
+            select->where_clause->accept(this);
         }
         return false;
     }

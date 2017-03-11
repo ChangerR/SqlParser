@@ -124,6 +124,7 @@ simple_selectstmt:
                 SelectStatement* stmt = new SelectStatement();
                 stmt->opt_target_list = $2;
                 stmt->from_list = $3;
+                stmt->where_clause = $4;
                 $$ = stmt;
             }
             ;
@@ -365,6 +366,8 @@ reserved_keyword:
             | AS
             | WHERE
             | FROM
+            | AND
+            | OR
             ;
 %%
 
