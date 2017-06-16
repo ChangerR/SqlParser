@@ -153,7 +153,7 @@ target_el:
                 char* buf = (char*)Allocator::malloc(8);
                 buf[0] = '*';
                 buf[1] = 0;
-                ref->fields.push_back(buf);
+                ref->fields.push_back(new SQLBaseElem(buf));
                 $$ = new ResTarget(ref,NULL);
             }
             ;
@@ -184,17 +184,16 @@ a_expr:     columnref                               { $$ = $1; }
 columnref:  ColId
             {
                 CloumnRef* ref = new CloumnRef();
-                ref->fields.push_back($1);
+                ref->fields.push_back(new SQLBaseElem($1));
                 $$ = ref;
             }
             | ColId indirection
             {
                 CloumnRef* ref = new CloumnRef();
-                ref->fields.push_back($1);
+                ref->fields.push_back(new SQLBaseElem($1));
 
                 for ( auto itr = $2->begin() ; itr != $2->end() ; ++itr) {
-                    ref->fields.push_back(((SQLString*)(*itr))->string);
-                    ((SQLString*)(*itr))->string = NULL;
+                    ref->fields.push_back((SQLBaseElem*)*itr); 
                 }
                 delete $2;
                 $$ = ref;
@@ -204,7 +203,7 @@ columnref:  ColId
 indirection_el:
 			'.' attr_name
 				{
-					$$ = new SQLString($2);
+					$$ = new SQLBaseElem($2);
 				}
             ;
 
@@ -240,7 +239,7 @@ where_clause:
  */
 table_ref:	relation_expr opt_alias_clause
             {
-                ((SQLTable*)$1)->alias = $2;
+                ((SQLTable*)$1)->alias_ = new SQLBaseElem($2);
                 $$ = $1;
             }
             ;
@@ -250,7 +249,7 @@ relation_expr:
             {
                 /* default inheritance */
                 $$ = $1;
-                ((SQLTable*)$$)->alias = NULL;
+                ((SQLTable*)$$)->alias_ = NULL;
             }
             ;
 
@@ -277,16 +276,16 @@ opt_alias_clause: alias_clause						{ $$ = $1; }
 qualified_name:
 			ColId
             {
-                $$ = new SQLTable(NULL, $1);
+                $$ = new SQLTable(NULL, new SQLBaseElem($1));
             }
 			| ColId indirection 
             {
                 SQLTable* table = new SQLTable(NULL,NULL);
                 $$ = table;
                 if ( $2->size() > 0 ) {
-                    table->schema = $1;
-                    table->table = ((SQLString*)$2->back())->string;
-                    ((SQLString*)$2->back())->string = NULL;
+                    table->schema_ = new SQLBaseElem($1);
+                    table->table_ = (SQLBaseElem*)($2->back());
+                    $2->pop_back();
                     release_list_object($2);
                 } 
             };

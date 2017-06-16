@@ -19,7 +19,7 @@ public:
 
     virtual bool visit(CloumnRef* ref) {
         for(auto itr = ref->fields.begin(); itr != ref->fields.end(); ++itr) {
-            output_.append(*itr);
+            visit(*itr);
             output_.push_back('.');
         }
         output_.pop_back();
@@ -101,25 +101,47 @@ public:
         
     }
 
-    virtual bool visit(SQLString* string) {
-        output_.append(string->string);
+    virtual bool visit(SQLBaseElem* elem) {
+
+        switch (elem->element.type) {
+            case SQLBaseElem::BASE_STRING:
+                if (elem->element.val.string)
+                    output_.append(elem->element.val.string);
+                break;
+            case SQLBaseElem::BASE_INT:
+            {
+                char buf[256];
+                snprintf(buf,256,"%d",elem->element.val.ival);
+                output_.append(buf);
+            }
+                break;
+            case SQLBaseElem::BASE_FLOAT:
+            {
+                char buf[256];
+                snprintf(buf,256,"%f",elem->element.val.fval);
+                output_.append(buf);
+            }
+                break;
+            default:
+                break;
+        }
         return false;
     }
 
-    virtual void endVisit(SQLString* string) {
+    virtual void endVisit(SQLBaseElem* elem) {
 
     }
 
     virtual bool visit(SQLTable* table) {
-        if(table->schema) {
-            output_.append(table->schema);
+        if(table->schema_) {
+            visit(table->schema_);
             output_.push_back('.');
         }
-        output_.append(table->table);
+        visit(table->table_);
 
-        if ( table->alias ) {
+        if ( table->alias_ ) {
             output_.push_back(' ');
-            output_.append(table->alias);
+            visit(table->alias_);
         }
 
         return false;

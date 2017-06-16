@@ -14,14 +14,14 @@ typedef struct core_yy_extra_type
 	 * The string the scanner is physically scanning.  We keep this mainly so
 	 * that we can cheaply compute the offset of the current token (yytext).
 	 */
-	char	   *scanbuf;
-	Size		scanbuflen;
+	char *scanbuf;
+	Size scanbuflen;
 
 	/*
 	 * The keyword list to use.
 	 */
 	const ScanKeyword *keywords;
-	int			num_keywords;
+	int num_keywords;
 
 	/*
 	 * Scanner settings to use.  These are initialized from the corresponding
@@ -29,9 +29,9 @@ typedef struct core_yy_extra_type
 	 * scanner_init() if they don't want the scanner's behavior to follow the
 	 * prevailing GUC settings.
 	 */
-	int			backslash_quote;
-	bool		escape_string_warning;
-	bool		standard_conforming_strings;
+	int backslash_quote;
+	bool escape_string_warning;
+	bool standard_conforming_strings;
 
 	/*
 	 * literalbuf is used to accumulate literal values when multiple rules are
@@ -40,19 +40,19 @@ typedef struct core_yy_extra_type
 	 * necessarily null-terminated, but there always IS room to add a trailing
 	 * null at offset literallen.  We store a null only when we need it.
 	 */
-	char	   *literalbuf;		/* palloc'd expandable buffer */
-	int			literallen;		/* actual current string length */
-	int			literalalloc;	/* current allocated buffer size */
+	char *literalbuf; /* palloc'd expandable buffer */
+	int literallen;   /* actual current string length */
+	int literalalloc; /* current allocated buffer size */
 
-	int			xcdepth;		/* depth of nesting in slash-star comments */
-	char	   *dolqstart;		/* current $foo$ quote start string */
+	int xcdepth;	 /* depth of nesting in slash-star comments */
+	char *dolqstart; /* current $foo$ quote start string */
 
 	/* first part of UTF16 surrogate pair for Unicode escapes */
-	int32		utf16_first_part;
+	int32 utf16_first_part;
 
 	/* state variables for literal-lexing warnings */
-	bool		warn_on_first_escape;
-	bool		saw_non_ascii;
+	bool warn_on_first_escape;
+	bool saw_non_ascii;
 } core_yy_extra_type;
 
 /*
@@ -60,11 +60,10 @@ typedef struct core_yy_extra_type
  * Note that this is a subset of the fields used in YYSTYPE of the bison
  * parsers built atop the scanner.
  */
-typedef union core_YYSTYPE
-{
-	int			ival;			/* for integer literals */
-	char	   *str;			/* for identifiers and non-integer literals */
-	const char *keyword;		/* canonical spelling of keywords */
+typedef union core_YYSTYPE {
+	int ival;			 /* for integer literals */
+	char *str;			 /* for identifiers and non-integer literals */
+	const char *keyword; /* canonical spelling of keywords */
 } core_YYSTYPE;
 
 /*
@@ -75,7 +74,7 @@ typedef union core_YYSTYPE
  * the beginning and ending locations as bison does by default.  It's
  * therefore sufficient to make YYLTYPE an int.
  */
-#define YYLTYPE  int 
+#define YYLTYPE int
 
 /*
  * The type of yyscanner is opaque outside scan.l.
@@ -83,14 +82,14 @@ typedef union core_YYSTYPE
 typedef void *core_yyscan_t;
 
 extern core_yyscan_t scanner_init(const char *str,
-			 core_yy_extra_type *yyext,
-			 const ScanKeyword *keywords,
-			 int num_keywords);
+								  core_yy_extra_type *yyext,
+								  const ScanKeyword *keywords,
+								  int num_keywords);
 
 extern void scanner_finish(core_yyscan_t yyscanner);
 
 extern int core_yylex(core_YYSTYPE *lvalp, YYLTYPE *llocp,
-		   core_yyscan_t yyscanner);
+					  core_yyscan_t yyscanner);
 
 extern void scanner_yyerror(const char *message, core_yyscan_t yyscanner);
 

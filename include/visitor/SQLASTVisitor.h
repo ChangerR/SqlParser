@@ -7,6 +7,7 @@ class SelectStatement;
 class SQLString;
 class SQLTable;
 class StatementBlock;
+class SQLBaseElem;
 
 class SQLASTVisitor{
 public:
@@ -28,9 +29,9 @@ public:
 
     virtual void endVisit(SelectStatement* select) = 0;
 
-    virtual bool visit(SQLString* string) = 0;
+    virtual bool visit(SQLBaseElem* elem) = 0;
 
-    virtual void endVisit(SQLString* string) = 0;
+    virtual void endVisit(SQLBaseElem* elem) = 0;
     
     virtual bool visit(SQLTable* table) = 0;
 
@@ -39,5 +40,6 @@ public:
     virtual bool visit(StatementBlock* block) = 0;
 
     virtual void endVisit(StatementBlock* block) = 0;
+
 };
 #endif

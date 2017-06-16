@@ -5,40 +5,50 @@
 
 class SelectStatement : public SingleStatement
 {
-public:
-    SelectStatement(){}
-    
-    virtual ~SelectStatement() {
-        if ( opt_target_list != NULL ) {
-            for ( auto itr = opt_target_list->begin(); itr != opt_target_list->end(); ++itr ) {
+  public:
+    SelectStatement() {}
+
+    virtual ~SelectStatement()
+    {
+        if (opt_target_list != NULL)
+        {
+            for (auto itr = opt_target_list->begin(); itr != opt_target_list->end(); ++itr)
+            {
                 delete *itr;
             }
             delete opt_target_list;
         }
     }
-    
-    virtual void accept(SQLASTVisitor* visitor) {
-        if ( visitor->visit(this) ) {
-            for ( auto itr = opt_target_list->begin() ; itr != opt_target_list->end() ; ++itr) {
+
+    virtual void accept(SQLASTVisitor *visitor)
+    {
+        if (visitor->visit(this))
+        {
+            for (auto itr = opt_target_list->begin(); itr != opt_target_list->end(); ++itr)
+            {
                 (*itr)->accept(visitor);
             }
-            if ( where_clause != NULL ) {
+            if (where_clause != NULL)
+            {
                 where_clause->accept(visitor);
             }
         }
         visitor->endVisit(this);
     }
 
-    virtual const std::string getSQLType() const {
+    virtual const std::string getSQLType() const
+    {
         return "SELECT";
     }
 
-    virtual NodeType getNodeType() {
+    virtual NodeType getNodeType()
+    {
         return SELECT_STMT;
     }
-public:
-    List * opt_target_list;
-    List * from_list;
-    SQLNode* where_clause;
+
+  public:
+    List *opt_target_list;
+    List *from_list;
+    SQLNode *where_clause;
 };
 #endif

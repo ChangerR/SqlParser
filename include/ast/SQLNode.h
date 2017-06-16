@@ -11,8 +11,8 @@ public:
         RESTARGET,
         COLUMNREF,
         SELECT_STMT,
-        STRING,
-        TABLE
+        BASE_ELEM,
+        TABLE,
     };
 
     virtual ~SQLNode() {}
@@ -22,13 +22,44 @@ public:
     virtual NodeType getNodeType() = 0;
 };
 
-class SQLString :public SQLNode {
+class SQLBaseElem :public SQLNode {
 public:
-    SQLString(char * string) :string(string){}
+    enum Type {
+        BASE_STRING = 0,
+        BASE_INT,
+        BASE_FLOAT,
+    };
+    struct Elem {
+        Type type;
+        union {
+            char* string;
+            int ival;
+            float fval;
+        } val;
+    };
 
-    virtual ~SQLString() {
-        if (string != NULL ) {
-            Allocator::free(string);
+    explicit SQLBaseElem(char* str) {
+         element.type = BASE_STRING; 
+         element.val.string = str;
+    }
+
+    SQLBaseElem(int ival) {
+        element.type = BASE_INT;
+        element.val.ival = ival;
+    }
+
+    SQLBaseElem(float fval) {
+        element.type = BASE_FLOAT;
+        element.val.fval = fval;
+    }
+
+    virtual NodeType getNodeType() {
+        return BASE_ELEM;
+    }
+
+    virtual ~SQLBaseElem() {
+        if (element.type == BASE_STRING && element.val.string != NULL) {
+            Allocator::free(element.val.string);
         }
     }
 
@@ -36,24 +67,25 @@ public:
         visitor->visit(this);
         visitor->endVisit(this);
     }
-
-    virtual NodeType getNodeType() {
-        return STRING;
-    }
 public:
-    char* string;
+    Elem element;
+private:
+    SQLBaseElem() {}
 };
 
 class SQLTable : public SQLNode {
 public:
-    SQLTable(char* schema,char* table) :schema(schema),table(table),alias(NULL){}
+    SQLTable(SQLBaseElem* schema,SQLBaseElem* table) :schema_(schema),table_(table),alias_(NULL){}
 
     virtual ~SQLTable() {
-        if ( schema ) {
-            Allocator::free(schema);
+        if ( schema_ ) {
+            delete schema_;
         }
-        if ( table ) {
-            Allocator::free(table);
+        if ( table_ ) {
+            delete table_;
+        }
+        if ( alias_ ) {
+            delete alias_;
         }
     }
 
@@ -65,10 +97,11 @@ public:
     virtual NodeType getNodeType() {
         return TABLE;
     }
+
 public:
-    char* schema;
-    char* table;
-    char* alias;
+    SQLBaseElem* schema_;
+    SQLBaseElem* table_;
+    SQLBaseElem* alias_;
 };
 
 class CloumnRef : public SQLNode {
@@ -78,7 +111,7 @@ public:
     virtual ~CloumnRef() {
         for( auto itr = fields.begin() ; itr != fields.end() ; ++itr) {
             if ( *itr != NULL ) {
-                Allocator::free(*itr);
+                delete *itr;
             }
         }
     }
@@ -92,7 +125,7 @@ public:
         return COLUMNREF;
     }
 public:
-    std::vector<char*> fields;
+    std::vector<SQLBaseElem*> fields;
 };
 
 class Expression : public SQLNode {
