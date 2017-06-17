@@ -159,6 +159,11 @@ target_el:
             ;
 
 a_expr:     columnref                               { $$ = $1; }
+            | ICONST                                { $$ = new SQLBaseElem($1); }
+            | FCONST                                { $$ = new SQLBaseElem($1); }
+            | SCONST                                { $$ = new SQLBaseElem($1); }
+            | BCONST                                { $$ = new SQLBaseElem($1); }
+            | XCONST                                { $$ = new SQLBaseElem($1); }
             | a_expr '+' a_expr                     
                 { $$ = new Expression(Expression::AEXPR_OP,"+",$1,$3); }
             | a_expr '-' a_expr
@@ -239,7 +244,7 @@ where_clause:
  */
 table_ref:	relation_expr opt_alias_clause
             {
-                ((SQLTable*)$1)->alias_ = new SQLBaseElem($2);
+                ((SQLTable*)$1)->alias_ = ($2 == NULL) ? NULL : new SQLBaseElem($2);
                 $$ = $1;
             }
             ;
