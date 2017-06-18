@@ -392,7 +392,7 @@ other			.
 					if (yyextra->literallen >= NAMEDATALEN)
 						truncate_identifier(ident, yyextra->literallen, true);
 					yylval->str = ident;
-					return IDENT;
+					return DOUBLE_SCONST;
 				}
 
 <xd>{xddouble}	{

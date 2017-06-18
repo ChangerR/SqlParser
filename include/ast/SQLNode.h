@@ -26,8 +26,11 @@ class SQLBaseElem :public SQLNode {
 public:
     enum Type {
         BASE_STRING = 0,
+        BASE_QUOTE_STRING,
+        BASE_DQUOTE_STRING,
         BASE_INT,
         BASE_FLOAT,
+        BASE_UKNOWN,
     };
     struct Elem {
         Type type;
@@ -38,9 +41,19 @@ public:
         } val;
     };
 
-    explicit SQLBaseElem(char* str) {
-         element.type = BASE_STRING; 
-         element.val.string = str;
+    explicit SQLBaseElem(char* str,Type type = BASE_STRING) {
+        switch(type) {
+            case BASE_STRING:
+            case BASE_QUOTE_STRING:
+            case BASE_DQUOTE_STRING:
+                element.type = type; 
+                element.val.string = str;
+                break;
+            default:
+                element.type = BASE_UKNOWN;
+                break;
+        }
+         
     }
 
     SQLBaseElem(int ival) {
@@ -58,9 +71,18 @@ public:
     }
 
     virtual ~SQLBaseElem() {
-        if (element.type == BASE_STRING && element.val.string != NULL) {
-            Allocator::free(element.val.string);
+        switch (element.type) {
+            case BASE_STRING:
+            case BASE_QUOTE_STRING:
+            case BASE_DQUOTE_STRING:
+                if (element.val.string != NULL) {
+                    Allocator::free(element.val.string);
+                }
+                break;
+            default:
+                break;
         }
+       
     }
 
     virtual void accept(SQLASTVisitor* visitor) {
@@ -173,7 +195,7 @@ public:
 
 class ResTarget : public SQLNode {
 public:
-    ResTarget(SQLNode* val,char* name) :val(val),name(name){}
+    ResTarget(SQLNode* val,SQLBaseElem* name) :val(val),name(name){}
     
     virtual ~ResTarget() {
         if ( val != NULL ) {
@@ -196,7 +218,7 @@ public:
     }
 public:
     SQLNode* val;
-    char* name;
+    SQLBaseElem* name;
 };
 
 typedef std::vector<SQLNode*> List;

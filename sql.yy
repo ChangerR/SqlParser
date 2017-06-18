@@ -65,10 +65,10 @@ inline List* lappend(List* list,SQLNode* node) {
 %type <stmt> single_statement SelectStmt simple_selectstmt
 %type <node> a_expr columnref indirection_el qualified_name relation_expr table_ref
              where_clause
-%type <str> ColLabel ColId attr_name opt_alias_clause alias_clause
+%type <node> ColLabel ColId attr_name opt_alias_clause alias_clause
 %type <target> target_el
 %type <list> opt_target_list target_list from_clause from_list indirection
-%token <str> IDENT FCONST SCONST BCONST XCONST Op
+%token <str> IDENT FCONST SCONST DOUBLE_SCONST BCONST XCONST Op
 %token <ival>	ICONST PARAM
 %token			DOT_DOT
 %token			LESS_EQUALS GREATER_EQUALS NOT_EQUALS
@@ -145,7 +145,7 @@ target_list:
 		    ;
 
 target_el:
-            a_expr AS ColLabel                    { $$ = new ResTarget($1,$3); }
+            a_expr AS ColLabel                    { $$ = new ResTarget($1,(SQLBaseElem*)$3); }
             | a_expr                                { $$ = new ResTarget($1,NULL); }
             | '*'
             {
@@ -161,7 +161,7 @@ target_el:
 a_expr:     columnref                               { $$ = $1; }
             | ICONST                                { $$ = new SQLBaseElem($1); }
             | FCONST                                { $$ = new SQLBaseElem($1); }
-            | SCONST                                { $$ = new SQLBaseElem($1); }
+            | SCONST                                { $$ = new SQLBaseElem($1,SQLBaseElem::BASE_QUOTE_STRING); }
             | BCONST                                { $$ = new SQLBaseElem($1); }
             | XCONST                                { $$ = new SQLBaseElem($1); }
             | a_expr '+' a_expr                     
@@ -189,13 +189,13 @@ a_expr:     columnref                               { $$ = $1; }
 columnref:  ColId
             {
                 CloumnRef* ref = new CloumnRef();
-                ref->fields.push_back(new SQLBaseElem($1));
+                ref->fields.push_back((SQLBaseElem*)$1);
                 $$ = ref;
             }
             | ColId indirection
             {
                 CloumnRef* ref = new CloumnRef();
-                ref->fields.push_back(new SQLBaseElem($1));
+                ref->fields.push_back((SQLBaseElem*)$1);
 
                 for ( auto itr = $2->begin() ; itr != $2->end() ; ++itr) {
                     ref->fields.push_back((SQLBaseElem*)*itr); 
@@ -208,7 +208,7 @@ columnref:  ColId
 indirection_el:
 			'.' attr_name
 				{
-					$$ = new SQLBaseElem($2);
+					$$ = $2;
 				}
             ;
 
@@ -244,7 +244,7 @@ where_clause:
  */
 table_ref:	relation_expr opt_alias_clause
             {
-                ((SQLTable*)$1)->alias_ = ($2 == NULL) ? NULL : new SQLBaseElem($2);
+                ((SQLTable*)$1)->alias_ = (SQLBaseElem*)$2;
                 $$ = $1;
             }
             ;
@@ -281,34 +281,44 @@ opt_alias_clause: alias_clause						{ $$ = $1; }
 qualified_name:
 			ColId
             {
-                $$ = new SQLTable(NULL, new SQLBaseElem($1));
+                $$ = new SQLTable(NULL, (SQLBaseElem*)$1);
             }
 			| ColId indirection 
             {
                 SQLTable* table = new SQLTable(NULL,NULL);
                 $$ = table;
                 if ( $2->size() > 0 ) {
-                    table->schema_ = new SQLBaseElem($1);
+                    table->schema_ = (SQLBaseElem*)$1;
                     table->table_ = (SQLBaseElem*)($2->back());
                     $2->pop_back();
                     release_list_object($2);
                 } 
             };
 
-attr_name:	ColLabel								{ $$ = $1; };
+attr_name:	ColLabel								{ $$ = $1; }
+            | '*'                                   
+            { 
+                char* buf = (char*)Allocator::malloc(8);
+                buf[0] = '*';
+                buf[1] = 0;
+                $$ = new SQLBaseElem(buf);
+            }
+
 
 ColLabel:
-            IDENT                                   { $$ = $1; }
-            | unreserved_keyword					{ $$ = sql_strdup($1); }
-			| col_name_keyword						{ $$ = sql_strdup($1); }
-			| type_func_name_keyword				{ $$ = sql_strdup($1); }
-			| reserved_keyword						{ $$ = sql_strdup($1); }
+            IDENT                                   { $$ = new SQLBaseElem($1); }
+            | DOUBLE_SCONST                         { $$ = new SQLBaseElem($1,SQLBaseElem::BASE_DQUOTE_STRING);}
+            | unreserved_keyword					{ $$ = new SQLBaseElem(sql_strdup($1)); }
+			| col_name_keyword						{ $$ = new SQLBaseElem(sql_strdup($1)); }
+			| type_func_name_keyword				{ $$ = new SQLBaseElem(sql_strdup($1)); }
+			| reserved_keyword						{ $$ = new SQLBaseElem(sql_strdup($1)); }
 		;
 
 ColId:
-            IDENT                                   { $$ = $1; }
-            | unreserved_keyword					{ $$ = sql_strdup($1); }
-			| col_name_keyword						{ $$ = sql_strdup($1); }
+            IDENT                                   { $$ = new SQLBaseElem($1); }
+            | DOUBLE_SCONST                         { $$ = new SQLBaseElem($1,SQLBaseElem::BASE_DQUOTE_STRING);}
+            | unreserved_keyword					{ $$ = new SQLBaseElem(sql_strdup($1)); }
+			| col_name_keyword						{ $$ = new SQLBaseElem(sql_strdup($1)); }
 		;
 /*
  * Keyword category lists.  Generally, every keyword present in

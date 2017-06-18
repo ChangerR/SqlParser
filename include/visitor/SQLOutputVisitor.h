@@ -62,7 +62,7 @@ public:
         resTarget->val->accept(this);
         if ( resTarget->name != NULL) {
             output_.append(" AS ");
-            output_.append(resTarget->name);
+            visit(resTarget->name);
         }
         return false;
     }
@@ -107,6 +107,20 @@ public:
             case SQLBaseElem::BASE_STRING:
                 if (elem->element.val.string)
                     output_.append(elem->element.val.string);
+                break;
+            case SQLBaseElem::BASE_QUOTE_STRING:
+                if (elem->element.val.string) {
+                    output_.push_back('\'');
+                    output_.append(elem->element.val.string);
+                    output_.push_back('\'');
+                }  
+                break;
+            case SQLBaseElem::BASE_DQUOTE_STRING:
+                if (elem->element.val.string) {
+                    output_.push_back('"');
+                    output_.append(elem->element.val.string);
+                    output_.push_back('"');
+                }  
                 break;
             case SQLBaseElem::BASE_INT:
             {

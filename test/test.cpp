@@ -33,10 +33,11 @@ int main(int args,char** argv)
     Allocator::free(buf);
 
     if ( block != NULL ) {
-         SQLOutputVisitor* visitor = new SQLOutputVisitor();
+        SQLOutputVisitor* visitor = new SQLOutputVisitor();
         block->accept(visitor);
         printf("\n--OUTPUT:\n%s\n",visitor->getOutputSQL());
         delete block;
+        delete visitor;
     } else {
         printf("parse occur error!\n");
         return 1;
