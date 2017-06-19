@@ -242,6 +242,7 @@ where_clause:
 /*
  * table_ref is where an alias clause can be attached.
  */
+
 table_ref:	relation_expr opt_alias_clause
             {
                 ((SQLTable*)$1)->alias_ = (SQLBaseElem*)$2;
