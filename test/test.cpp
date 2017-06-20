@@ -6,6 +6,7 @@
 
 int main(int args,char** argv)
 {
+    int i;
     if ( args < 2) {
         fprintf(stderr,"please enter sql file.\n");
         return 1;
