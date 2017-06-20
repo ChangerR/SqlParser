@@ -13,6 +13,7 @@ public:
         SELECT_STMT,
         BASE_ELEM,
         TABLE,
+        SUBSELECT,
     };
 
     virtual ~SQLNode() {}
@@ -125,6 +126,7 @@ public:
     SQLBaseElem* table_;
     SQLBaseElem* alias_;
 };
+
 
 class CloumnRef : public SQLNode {
 public:

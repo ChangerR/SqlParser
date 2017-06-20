@@ -182,6 +182,22 @@ public:
     virtual void endVisit(StatementBlock* block) {
 
     }
+
+    virtual bool visit(SQLSubSelect* sub) {
+        if (sub->stmt_) {
+            output_.push_back('(');
+            sub->stmt_->accept(this);
+            output_.push_back(')');
+            if (sub->alias_) {
+                output_.push_back(' ');
+                visit(sub->alias_);
+            }
+        }
+    }
+
+    virtual bool endVisit(SQLSubSelect* sub) {
+
+    }
 private:
     std::string output_;
 };

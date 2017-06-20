@@ -62,7 +62,7 @@ inline List* lappend(List* list,SQLNode* node) {
 }
 
 %type <block> stmtblock
-%type <stmt> single_statement SelectStmt simple_selectstmt
+%type <stmt> single_statement SelectStmt simple_selectstmt select_with_parens
 %type <node> a_expr columnref indirection_el qualified_name relation_expr table_ref
              where_clause
 %type <node> ColLabel ColId attr_name opt_alias_clause alias_clause
@@ -83,6 +83,7 @@ inline List* lappend(List* list,SQLNode* node) {
 %left           '+' '-'
 %left           '*' '/' '%'
 %left           '.'
+%left           UMINUS 
 %%
 stmtmuti: stmtblock 
             {
@@ -115,8 +116,14 @@ single_statement:
             }
             ;
 
-SelectStmt: simple_selectstmt                       { $$ = $1; }
+SelectStmt: simple_selectstmt                       { $$ = $1; }     %prec UMINUS
+            | select_with_parens                    { $$ = $1; }     %prec UMINUS
             ;
+
+select_with_parens:
+			'(' simple_selectstmt ')'				{ $$ = $2; }
+			| '(' select_with_parens ')'			{ $$ = $2; }
+		;
 
 simple_selectstmt:
             SELECT opt_target_list from_clause where_clause
@@ -247,6 +254,10 @@ table_ref:	relation_expr opt_alias_clause
                 ((SQLTable*)$1)->alias_ = (SQLBaseElem*)$2;
                 $$ = $1;
             }
+            | select_with_parens opt_alias_clause
+            {
+                $$ = new SQLSubSelect((SelectStatement*)$1,(SQLBaseElem*)$2);
+            }
             ;
 
 relation_expr:
@@ -258,7 +269,9 @@ relation_expr:
             }
             ;
 
-alias_clause: ColId                                 { $$ = $1;}
+alias_clause: 
+            ColId                                   { $$ = $1; }
+            | AS ColId                              { $$ = $2; }
             ;
 
 opt_alias_clause: alias_clause						{ $$ = $1; }
