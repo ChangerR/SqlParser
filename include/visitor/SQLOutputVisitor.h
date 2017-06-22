@@ -193,10 +193,11 @@ public:
                 visit(sub->alias_);
             }
         }
+        return false;
     }
 
     virtual bool endVisit(SQLSubSelect* sub) {
-
+        return false;
     }
 private:
     std::string output_;

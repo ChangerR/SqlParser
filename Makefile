@@ -14,6 +14,7 @@ OS = $(shell uname -s)
 SONAME?=so
 ifeq ("$(OS)","Darwin")
 	SONAME:=dylib
+	LKFALG=-Lbuild/lib -L. -Wl,-F$(SRCTREE)/build/lib -Wl,-F$(SRCTREE)
 endif
 ifeq ("MINGW","$(findstring MINGW,$(OS))")
 	SONAME:=dll
