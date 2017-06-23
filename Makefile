@@ -62,6 +62,9 @@ test:
 build/include/gperftools/tcmalloc.h:
 	cd 3rd/gperftools && ./autogen.sh && ./configure --prefix=$(SRCTREE)/build && make install
 
+include/kwlist.h:sql.yy
+	python keyword.py $< $@
+
 %.d:%.cpp 
 	rm -f $@; $(CC) -MM $< $(INCLUDE) > $@.$$$$; \
 	if [ -s $@.$$$$ ] ; then \
