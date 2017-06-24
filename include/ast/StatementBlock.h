@@ -7,7 +7,7 @@ class SQLASTVisitor;
 class StatementBlock {
 public:
     virtual ~StatementBlock() {
-        for ( auto itr = stmts_.begin(); itr != stmts_.end(); ++ itr){
+        for ( std::vector<SingleStatement*>::iterator itr = stmts_.begin(); itr != stmts_.end(); ++ itr){
             delete *itr;
         }
     }
@@ -18,7 +18,7 @@ public:
 
     void accept(SQLASTVisitor* visitor) {
         if ( visitor->visit(this) ) {
-            for (auto itr = stmts_.begin();itr != stmts_.end(); ++itr) {
+            for (std::vector<SingleStatement*>::iterator itr = stmts_.begin();itr != stmts_.end(); ++itr) {
                 (*itr)->accept(visitor);
             }
         }

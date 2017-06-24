@@ -14,3 +14,6 @@ main
 sql.output
 libsqlparser.*
 testparser
+node_modules
+*.pyc
+proxy.py

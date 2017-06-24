@@ -720,7 +720,7 @@ scanner_yyerror(const char *message, core_yyscan_t yyscanner)
 {
 	const char *loc = yyextra->scanbuf + *yylloc;
 
-	printf("scanner yyerror:%s\n",message);
+	printf("scanner yyerror:%s\n\tunknow:%s\n",message,loc);
 }
 
 /*

@@ -12,7 +12,7 @@ class SelectStatement : public SingleStatement
     {
         if (opt_target_list != NULL)
         {
-            for (auto itr = opt_target_list->begin(); itr != opt_target_list->end(); ++itr)
+            for (List::iterator itr = opt_target_list->begin(); itr != opt_target_list->end(); ++itr)
             {
                 delete *itr;
             }
@@ -24,7 +24,7 @@ class SelectStatement : public SingleStatement
     {
         if (visitor->visit(this))
         {
-            for (auto itr = opt_target_list->begin(); itr != opt_target_list->end(); ++itr)
+            for (List::iterator itr = opt_target_list->begin(); itr != opt_target_list->end(); ++itr)
             {
                 (*itr)->accept(visitor);
             }
@@ -47,8 +47,40 @@ class SelectStatement : public SingleStatement
     }
 
   public:
+    SQLBaseElem* opt_all_clause;
     List *opt_target_list;
     List *from_list;
     SQLNode *where_clause;
+};
+
+class SQLSubSelect : public SQLNode
+{
+  public:
+    SQLSubSelect(SelectStatement *stmt, SQLBaseElem *alias) : stmt_(stmt),alias_(alias) {}
+    virtual ~SQLSubSelect() {
+        if (stmt_) {
+            delete stmt_;
+            stmt_ = NULL;
+        }
+        if (alias_) {
+            delete alias_;
+            alias_ = NULL;
+        }
+    }
+
+    virtual void accept(SQLASTVisitor *visitor)
+    {
+        visitor->visit(this);
+        visitor->endVisit(this);
+    }
+
+    virtual NodeType getNodeType()
+    {
+        return SUBSELECT;
+    }
+
+  public:
+    SelectStatement *stmt_;
+    SQLBaseElem *alias_;
 };
 #endif

@@ -62,10 +62,10 @@ inline List* lappend(List* list,SQLNode* node) {
 }
 
 %type <block> stmtblock
-%type <stmt> single_statement SelectStmt simple_selectstmt
+%type <stmt> single_statement SelectStmt simple_selectstmt select_with_parens
 %type <node> a_expr columnref indirection_el qualified_name relation_expr table_ref
              where_clause
-%type <node> ColLabel ColId attr_name opt_alias_clause alias_clause
+%type <node> ColLabel ColId attr_name opt_alias_clause alias_clause opt_all_clause
 %type <target> target_el
 %type <list> opt_target_list target_list from_clause from_list indirection
 %token <str> IDENT FCONST SCONST DOUBLE_SCONST BCONST XCONST Op
@@ -75,7 +75,7 @@ inline List* lappend(List* list,SQLNode* node) {
 %type <keyword> unreserved_keyword type_func_name_keyword
 %type <keyword> col_name_keyword reserved_keyword
 %token <keyword> SELECT FROM WHERE AS SET INT LEFT LIKE RIGHT
-                 OR AND
+                 OR AND ALL DISTINCT
 
 %left           OR
 %left           AND
@@ -83,6 +83,7 @@ inline List* lappend(List* list,SQLNode* node) {
 %left           '+' '-'
 %left           '*' '/' '%'
 %left           '.'
+%left           UMINUS 
 %%
 stmtmuti: stmtblock 
             {
@@ -115,20 +116,34 @@ single_statement:
             }
             ;
 
-SelectStmt: simple_selectstmt                       { $$ = $1; }
+SelectStmt: simple_selectstmt                       { $$ = $1; }     %prec UMINUS
+            | select_with_parens                    { $$ = $1; }     %prec UMINUS
             ;
 
+select_with_parens:
+			'(' simple_selectstmt ')'				{ $$ = $2; }
+			| '(' select_with_parens ')'			{ $$ = $2; }
+		;
+
 simple_selectstmt:
-            SELECT opt_target_list from_clause where_clause
+            SELECT opt_all_clause opt_target_list from_clause where_clause
             {
                 SelectStatement* stmt = new SelectStatement();
-                stmt->opt_target_list = $2;
-                stmt->from_list = $3;
-                stmt->where_clause = $4;
+                stmt->opt_all_clause = (SQLBaseElem*)$2;
+                stmt->opt_target_list = $3;
+                stmt->from_list = $4;
+                stmt->where_clause = $5;
                 $$ = stmt;
             }
             ;
 
+opt_all_clause: ALL                                 { $$ = new SQLBaseElem(sql_strdup("ALL")); }
+            | DISTINCT                              { $$ = new SQLBaseElem(sql_strdup("DISTINCT")); }
+            | /*empty*/
+            {
+                $$ = NULL
+            }
+            ;
 /*****************************************************************************
  *
  *	target list for SELECT
@@ -197,7 +212,7 @@ columnref:  ColId
                 CloumnRef* ref = new CloumnRef();
                 ref->fields.push_back((SQLBaseElem*)$1);
 
-                for ( auto itr = $2->begin() ; itr != $2->end() ; ++itr) {
+                for ( List::iterator itr = $2->begin() ; itr != $2->end() ; ++itr) {
                     ref->fields.push_back((SQLBaseElem*)*itr); 
                 }
                 delete $2;
@@ -242,10 +257,15 @@ where_clause:
 /*
  * table_ref is where an alias clause can be attached.
  */
+
 table_ref:	relation_expr opt_alias_clause
             {
                 ((SQLTable*)$1)->alias_ = (SQLBaseElem*)$2;
                 $$ = $1;
+            }
+            | select_with_parens opt_alias_clause
+            {
+                $$ = new SQLSubSelect((SelectStatement*)$1,(SQLBaseElem*)$2);
             }
             ;
 
@@ -258,7 +278,9 @@ relation_expr:
             }
             ;
 
-alias_clause: ColId                                 { $$ = $1;}
+alias_clause: 
+            ColId                                   { $$ = $1; }
+            | AS ColId                              { $$ = $2; }
             ;
 
 opt_alias_clause: alias_clause						{ $$ = $1; }
@@ -382,6 +404,8 @@ reserved_keyword:
             | FROM
             | AND
             | OR
+            | ALL
+            | DISTINCT
             ;
 %%
 
@@ -408,7 +432,7 @@ parser_init(base_yy_extra_type *yyext)
 
 static void release_list_object(List* list) {
     if ( list ) {
-        for ( auto itr = list->begin(); itr != list->end() ; ++ itr) {
+        for ( List::iterator itr = list->begin(); itr != list->end() ; ++ itr) {
             delete (*itr);
         }
         delete list;

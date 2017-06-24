@@ -13,6 +13,7 @@ public:
         SELECT_STMT,
         BASE_ELEM,
         TABLE,
+        SUBSELECT,
     };
 
     virtual ~SQLNode() {}
@@ -126,12 +127,13 @@ public:
     SQLBaseElem* alias_;
 };
 
+
 class CloumnRef : public SQLNode {
 public:
     CloumnRef() {}
 
     virtual ~CloumnRef() {
-        for( auto itr = fields.begin() ; itr != fields.end() ; ++itr) {
+        for( std::vector<SQLBaseElem*>::iterator itr = fields.begin() ; itr != fields.end() ; ++itr) {
             if ( *itr != NULL ) {
                 delete *itr;
             }
