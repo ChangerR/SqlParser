@@ -47,6 +47,7 @@ class SelectStatement : public SingleStatement
     }
 
   public:
+    SQLBaseElem* opt_all_clause;
     List *opt_target_list;
     List *from_list;
     SQLNode *where_clause;

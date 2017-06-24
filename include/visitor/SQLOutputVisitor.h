@@ -74,6 +74,10 @@ public:
     virtual bool visit(SelectStatement* select) {
         output_.append("SELECT ");
 
+        if ( select->opt_all_clause != NULL ) {
+            visit(select->opt_all_clause);
+            output_.push_back(' ');
+        }
         if ( select->opt_target_list != NULL ) {
             for ( auto itr = select->opt_target_list->begin(); itr != select->opt_target_list->end();++itr) {
                 (*itr)->accept(this);

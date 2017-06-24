@@ -65,7 +65,7 @@ inline List* lappend(List* list,SQLNode* node) {
 %type <stmt> single_statement SelectStmt simple_selectstmt select_with_parens
 %type <node> a_expr columnref indirection_el qualified_name relation_expr table_ref
              where_clause
-%type <node> ColLabel ColId attr_name opt_alias_clause alias_clause
+%type <node> ColLabel ColId attr_name opt_alias_clause alias_clause opt_all_clause
 %type <target> target_el
 %type <list> opt_target_list target_list from_clause from_list indirection
 %token <str> IDENT FCONST SCONST DOUBLE_SCONST BCONST XCONST Op
@@ -75,7 +75,7 @@ inline List* lappend(List* list,SQLNode* node) {
 %type <keyword> unreserved_keyword type_func_name_keyword
 %type <keyword> col_name_keyword reserved_keyword
 %token <keyword> SELECT FROM WHERE AS SET INT LEFT LIKE RIGHT
-                 OR AND
+                 OR AND ALL DISTINCT
 
 %left           OR
 %left           AND
@@ -126,16 +126,24 @@ select_with_parens:
 		;
 
 simple_selectstmt:
-            SELECT opt_target_list from_clause where_clause
+            SELECT opt_all_clause opt_target_list from_clause where_clause
             {
                 SelectStatement* stmt = new SelectStatement();
-                stmt->opt_target_list = $2;
-                stmt->from_list = $3;
-                stmt->where_clause = $4;
+                stmt->opt_all_clause = (SQLBaseElem*)$2;
+                stmt->opt_target_list = $3;
+                stmt->from_list = $4;
+                stmt->where_clause = $5;
                 $$ = stmt;
             }
             ;
 
+opt_all_clause: ALL                                 { $$ = new SQLBaseElem(sql_strdup("ALL")); }
+            | DISTINCT                              { $$ = new SQLBaseElem(sql_strdup("DISTINCT")); }
+            | /*empty*/
+            {
+                $$ = NULL
+            }
+            ;
 /*****************************************************************************
  *
  *	target list for SELECT
@@ -396,6 +404,8 @@ reserved_keyword:
             | FROM
             | AND
             | OR
+            | ALL
+            | DISTINCT
             ;
 %%
 
