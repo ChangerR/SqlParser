@@ -12,7 +12,7 @@ class SelectStatement : public SingleStatement
     {
         if (opt_target_list != NULL)
         {
-            for (auto itr = opt_target_list->begin(); itr != opt_target_list->end(); ++itr)
+            for (List::iterator itr = opt_target_list->begin(); itr != opt_target_list->end(); ++itr)
             {
                 delete *itr;
             }
@@ -24,7 +24,7 @@ class SelectStatement : public SingleStatement
     {
         if (visitor->visit(this))
         {
-            for (auto itr = opt_target_list->begin(); itr != opt_target_list->end(); ++itr)
+            for (List::iterator itr = opt_target_list->begin(); itr != opt_target_list->end(); ++itr)
             {
                 (*itr)->accept(visitor);
             }

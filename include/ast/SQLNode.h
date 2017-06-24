@@ -133,7 +133,7 @@ public:
     CloumnRef() {}
 
     virtual ~CloumnRef() {
-        for( auto itr = fields.begin() ; itr != fields.end() ; ++itr) {
+        for( std::vector<SQLBaseElem*>::iterator itr = fields.begin() ; itr != fields.end() ; ++itr) {
             if ( *itr != NULL ) {
                 delete *itr;
             }

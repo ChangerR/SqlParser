@@ -18,7 +18,7 @@ public:
     }
 
     virtual bool visit(CloumnRef* ref) {
-        for(auto itr = ref->fields.begin(); itr != ref->fields.end(); ++itr) {
+        for(std::vector<SQLBaseElem*>::iterator itr = ref->fields.begin(); itr != ref->fields.end(); ++itr) {
             visit(*itr);
             output_.push_back('.');
         }
@@ -79,7 +79,7 @@ public:
             output_.push_back(' ');
         }
         if ( select->opt_target_list != NULL ) {
-            for ( auto itr = select->opt_target_list->begin(); itr != select->opt_target_list->end();++itr) {
+            for ( List::iterator itr = select->opt_target_list->begin(); itr != select->opt_target_list->end();++itr) {
                 (*itr)->accept(this);
                 output_.push_back(',');
             }
@@ -87,7 +87,7 @@ public:
         }
         if ( select->from_list != NULL ) {
             output_.append(" FROM ");
-            for ( auto itr = select->from_list->begin(); itr != select->from_list->end();++itr) {
+            for ( List::iterator itr = select->from_list->begin(); itr != select->from_list->end();++itr) {
                 (*itr)->accept(this);
                 output_.push_back(',');
             }
@@ -172,7 +172,7 @@ public:
     virtual bool visit(StatementBlock* block) {
         
         if ( block != NULL ) {
-            for ( auto itr = block->getStmts().begin(); itr != block->getStmts().end(); ++itr) {
+            for ( std::vector<SingleStatement*>::const_iterator itr = block->getStmts().begin(); itr != block->getStmts().end(); ++itr) {
                 (*itr)->accept(this);
                 output_.push_back(';');
                 output_.push_back('\n');

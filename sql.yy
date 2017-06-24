@@ -212,7 +212,7 @@ columnref:  ColId
                 CloumnRef* ref = new CloumnRef();
                 ref->fields.push_back((SQLBaseElem*)$1);
 
-                for ( auto itr = $2->begin() ; itr != $2->end() ; ++itr) {
+                for ( List::iterator itr = $2->begin() ; itr != $2->end() ; ++itr) {
                     ref->fields.push_back((SQLBaseElem*)*itr); 
                 }
                 delete $2;
@@ -432,7 +432,7 @@ parser_init(base_yy_extra_type *yyext)
 
 static void release_list_object(List* list) {
     if ( list ) {
-        for ( auto itr = list->begin(); itr != list->end() ; ++ itr) {
+        for ( List::iterator itr = list->begin(); itr != list->end() ; ++ itr) {
             delete (*itr);
         }
         delete list;

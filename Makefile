@@ -1,13 +1,13 @@
 SRCTREE?= $(shell pwd)
-CC:=gcc
-CXX:=g++
+CC?=gcc
+CXX?=g++
 OPTIMIZATION?=-O2
 WARNINGS=-Wall -Wno-deprecated-register
 DEBUG?= -g -ggdb -DDEBUG=1 -DYYDEBUG=1
 LEX=flex
 YACC=bison
 INCLUDE= -Iinclude -Ibuild/include
-REAL_CFLAGS= -std=c++11 -fPIC $(OPTIMIZATION) $(WARNINGS) $(DEBUG) $(INCLUDE) -c
+REAL_CFLAGS= -std=gnu++11 -fPIC $(OPTIMIZATION) $(WARNINGS) $(DEBUG) $(INCLUDE) -c
 LKFALG= -Lbuild/lib -L. -Wl,-rpath=$(SRCTREE)/build/lib -Wl,-rpath=$(SRCTREE)
 LDLIB = -ltcmalloc
 OS = $(shell uname -s)
