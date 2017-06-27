@@ -40,7 +40,7 @@ inline List* lappend(List* list,SQLNode* node) {
 %}
 %pure-parser
 %expect 0
-%name-prefix="base_yy"
+%define api.prefix {base_yy}
 %locations
 
 %parse-param {core_yyscan_t yyscanner}
@@ -63,7 +63,7 @@ inline List* lappend(List* list,SQLNode* node) {
 
 %type <block> stmtblock
 %type <stmt> single_statement SelectStmt simple_selectstmt select_with_parens
-%type <node> a_expr columnref indirection_el qualified_name relation_expr table_ref
+%type <node> a_expr columnref indirection_el qualified_name relation_expr table_ref joined_table
              where_clause
 %type <node> ColLabel ColId attr_name opt_alias_clause alias_clause opt_all_clause
 %type <target> target_el
@@ -141,7 +141,7 @@ opt_all_clause: ALL                                 { $$ = new SQLBaseElem(sql_s
             | DISTINCT                              { $$ = new SQLBaseElem(sql_strdup("DISTINCT")); }
             | /*empty*/
             {
-                $$ = NULL
+                $$ = NULL;
             }
             ;
 /*****************************************************************************
@@ -267,6 +267,10 @@ table_ref:	relation_expr opt_alias_clause
             {
                 $$ = new SQLSubSelect((SelectStatement*)$1,(SQLBaseElem*)$2);
             }
+            | joined_table 
+            {
+                $$ = $1;
+            }
             ;
 
 relation_expr:
@@ -287,6 +291,52 @@ opt_alias_clause: alias_clause						{ $$ = $1; }
 			| /*EMPTY*/								{ $$ = NULL; }
 		;
 
+/*
+ * It may seem silly to separate joined_table from table_ref, but there is
+ * method in SQL's madness: if you don't do it this way you get reduce-
+ * reduce conflicts, because it's not clear to the parser generator whether
+ * to expect alias_clause after ')' or not.  For the same reason we must
+ * treat 'JOIN' and 'join_type JOIN' separately, rather than allowing
+ * join_type to expand to empty; if we try it, the parser generator can't
+ * figure out when to reduce an empty join_type right after table_ref.
+ *
+ * Note that a CROSS JOIN is the same as an unqualified
+ * INNER JOIN, and an INNER JOIN/ON has the same shape
+ * but a qualification expression to limit membership.
+ * A NATURAL JOIN implicitly matches column names between
+ * tables and the shape is determined by which columns are
+ * in common. We'll collect columns during the later transformations.
+ */
+
+joined_table:
+            '(' joined_table ')'
+            {
+                $$ = $2;
+            }
+			| table_ref CROSS JOIN table_ref
+            {
+                /* CROSS JOIN is same as unqualified inner join */
+                JoinExpr* n = new JoinExpr(JoinExpr::CROSS_JOIN);
+                n->isNatural_ = false;
+                n->larg_ = $1;
+                n->rarg_ = $4;
+                n->usingClause_ = NULL;
+                $$ = n;
+            }
+			| table_ref join_type JOIN table_ref join_qual
+            {
+                JoinExpr *n = makeNode(JoinExpr);
+                n->jointype = $2;
+                n->isNatural = FALSE;
+                n->larg = $1;
+                n->rarg = $4;
+                if ($5 != NULL && IsA($5, List))
+                    n->usingClause = (List *) $5; /* USING clause */
+                else
+                    n->quals = $5; /* ON clause */
+                $$ = n;
+            }
+            ;
 /*****************************************************************************
  *
  *	Names and constants
@@ -389,6 +439,8 @@ type_func_name_keyword:
             LEFT
             | RIGHT
             | LIKE
+            | JOIN
+            | CROSS
             ;
 
 /* Reserved keyword --- these keywords are usable only as a ColLabel.
@@ -406,6 +458,7 @@ reserved_keyword:
             | OR
             | ALL
             | DISTINCT
+            | ON
             ;
 %%
 

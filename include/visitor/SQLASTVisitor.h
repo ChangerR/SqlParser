@@ -9,6 +9,7 @@ class SQLTable;
 class StatementBlock;
 class SQLBaseElem;
 class SQLSubSelect;
+class JoinExpr;
 
 class SQLASTVisitor{
 public:
@@ -44,7 +45,10 @@ public:
 
     virtual bool visit(SQLSubSelect* sub) = 0;
 
-    virtual bool endVisit(SQLSubSelect* sub) = 0;
+    virtual void endVisit(SQLSubSelect* sub) = 0;
 
+    virtual bool visit(JoinExpr* expr) = 0;
+
+    virtual void endVisit(JoinExpr* expr) = 0;
 };
 #endif

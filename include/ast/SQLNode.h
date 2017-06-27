@@ -14,6 +14,7 @@ public:
         BASE_ELEM,
         TABLE,
         SUBSELECT,
+        JOIN_EXPR,
     };
 
     virtual ~SQLNode() {}
@@ -193,6 +194,65 @@ public:
     const char* name;
     SQLNode* lexpr;
     SQLNode* rexpr;
+};
+
+class JoinExpr : public SQLNode {
+public:
+    enum JOIN_TYPE{
+        INNER_JOIN = 0,
+        CROSS_JOIN,
+        LEFT_JOIN,
+        RIGHT_JOIN
+    };
+    JoinExpr(JOIN_TYPE type):larg_(NULL),rarg_(NULL),isNatural_(false),usingClause_(NULL) {}
+    virtual ~JoinExpr() {
+        if (larg_) {
+            delete larg_;
+            larg_ = NULL;
+        }
+        if (rarg_) {
+            delete rarg_;
+            rarg_ = NULL;
+        }
+        if (usingClause_) {
+            for (List::iterator itr = usingClause_->begin(); itr != usingClause_->end(); ++itr) {
+                if (*itr != NULL) {
+                    delete *itr;
+                    *itr = NULL;
+                }
+            }
+            usingClause_->clear();
+        }
+    }
+
+    virtual void accept(SQLASTVisitor* visitor) {
+        if ( visitor->visit(this) ) {
+            if (larg_) {
+                larg_->accept(visitor);
+            }
+            if (rarg_) {
+                rarg_->accept(visitor);
+            }
+            if (usingClause_) {
+                for (List::iterator itr = usingClause_->begin(); itr != usingClause_->end(); ++itr) {
+                    if (*itr) {
+                        (*itr)->accept(visitor);
+                    }
+                }
+            }
+        }
+        visitor->endVisit(visitor);
+    }
+
+    virtual NodeType getNodeType() {
+        return JOIN_EXPR;
+    }
+public:
+    JOIN_TYPE type_;
+    SQLNode* larg_;
+    SQLNode* rarg_;
+    bool isNatural_;
+    List* usingClause_;
 };
 
 class ResTarget : public SQLNode {

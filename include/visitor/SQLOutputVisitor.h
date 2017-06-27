@@ -200,8 +200,14 @@ public:
         return false;
     }
 
-    virtual bool endVisit(SQLSubSelect* sub) {
+    virtual void endVisit(SQLSubSelect* sub) {
+    }
+
+    virtual bool visit(JoinExpr* expr) {
         return false;
+    }
+
+    virtual void endVisit(JoinExpr* expr) {
     }
 private:
     std::string output_;
